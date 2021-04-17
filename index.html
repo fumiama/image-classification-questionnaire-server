@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>图像分类问卷调查</title>
+		<style>
+			.img_box{
+				padding-bottom:100%;
+			}
+			.img_box img{
+				position:absolute;
+				top:0;
+				bottom:0;
+				left:0;
+				right:0;
+				height:100%;
+				margin:auto;
+				z-index: -1;
+			}
+			.btn_show{
+				text-align:center;
+				z-index: 1;
+			}
+		</style>
+	</head>
+	<body>
+		<script>
+			user_uuid = "";
+			function get_data(url, recv_fun) {
+				var httpRequest = new XMLHttpRequest();	//第一步：建立所需的对象
+        		httpRequest.open('GET', url, true);		//第二步：打开连接,将请求参数写在url中
+        		httpRequest.send();						//第三步：发送请求
+        		httpRequest.onreadystatechange = function () {
+            		if (httpRequest.readyState == 4 && httpRequest.status == 200) {
+                		recv_fun(httpRequest.responseText);
+            		}
+        		};
+			}
+			function get_random_img(){
+				if(user_uuid == "") alert("未登录!");
+				else {
+					get_data("/pick?" + user_uuid, function rri(t) {
+						document.getElementById("img_display").src = "/" + t;
+					});
+				}
+			}
+			function login() {
+				input = prompt("请输入用户名","示例");
+				if(input.length == 2) user_uuid = input;
+			}
+			function register() {
+				if(user_uuid == "") get_data("/signup", function rr(t) {
+					prompt("这是您的用户名，请复制好后妥善保存", t);
+					user_uuid = t;
+				});
+			}
+			function vote(class_val) {
+				if(user_uuid != "") {
+					img_src = document.getElementById("img_display").src;
+					get_data("/vote?uuid=" + user_uuid + "&img=" + img_src.substring(img_src.lastIndexOf('/')+1, img_src.length) + "&class=" + class_val, function rv(t) {
+						alert(t);
+					});
+				} else alert("请登录!");
+			}
+		</script>
+		<div class="btn_show">
+			<h1>图像分类问卷调查</h1>
+			<button id = "btn_rand" type="button" onclick="get_random_img()">随机</button>
+			<button id = "btn_upld" type="button" onclick="alert('开发中')">上传</button>
+			<button id = "btn_lgin" type="button" onclick="login()">登录</button>
+			<button id = "btn_regi" type="button" onclick="register()">注册</button>
+		</div>
+		<div class="btn_show">
+			<button type="button" onclick="vote('0')">0分</button>
+			<button type="button" onclick="vote('1')">1分</button>
+			<button type="button" onclick="vote('2')">2分</button>
+			<button type="button" onclick="vote('3')">4分</button>
+			<button type="button" onclick="vote('4')">8分</button>
+			<button type="button" onclick="vote('5')">16分</button>
+			<button type="button" onclick="vote('6')">32分</button>
+			<button type="button" onclick="vote('7')">64分</button>
+		</div>
+		<div class="img_box">
+			<img id = "img_display" src="/埃來嚮棏"/>
+		</div>
+	</body>
+</html>
