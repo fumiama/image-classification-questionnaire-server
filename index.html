@@ -4,6 +4,39 @@
 		<meta charset="utf-8">
 		<title>图像分类问卷调查</title>
 		<style>
+			body {
+				font-size: 16px;
+			}
+			/*
+			 *具有缩放效果的按钮样式，父级需要设置font-size
+			 *可以通过background-color,border-color覆盖得到不同颜色的按钮
+			 **/
+			button {
+				padding: .3em .8em;
+				border: 1px solid #ffb2c5;
+				/*background: #58a linear-gradient(#77a0bb,#58a);*/
+				background: rgba(255, 198, 222, .3) linear-gradient(hsla(0,0%,100%,.2),transparent);
+				border-radius: .2em;
+				/*box-shadow: 0 .05em .25em gray;*/
+				box-shadow: 0 .05em .25em rgba(0,0,0,.5);
+				color: white;
+				text-shadow: 0 -.05em .05em #335166;
+				font-size: 125%;
+				line-height: 1.5;
+			}
+			input {
+				padding: .3em .8em;
+				border: 1px solid #ffb2c5;
+				/*background: #58a linear-gradient(#77a0bb,#58a);*/
+				background: rgba(255, 198, 222, .3) linear-gradient(hsla(0,0%,100%,.2),transparent);
+				border-radius: .2em;
+				/*box-shadow: 0 .05em .25em gray;*/
+				box-shadow: 0 .05em .25em rgba(0,0,0,.5);
+				color: white;
+				text-shadow: 0 -.05em .05em #335166;
+				font-size: 80%;
+				line-height: 1.5;
+			}
 			div{
 				text-align:center;
 			}
@@ -22,8 +55,8 @@
 				max-height: 100%;
     			max-width: 100%;
     			object-fit: contain;
-    			object-position: center bottom;
-    			vertical-align: bottom;
+    			object-position: center;
+    			vertical-align: center;
 			}
 			.btn_show_foot{
 				z-index: 1;
@@ -73,6 +106,13 @@
 					});
 				} else alert("请登录!");
 			}
+			all_hidden = false;
+			divs = document.getElementsByTagName("div");
+			function hideordisp() {
+				all_hidden = !all_hidden;
+				divs[0].hidden = divs[2].hidden = divs[4].hidden = all_hidden;
+				document.getElementById("btn_hide").innerText = all_hidden?"显示":"隐藏";
+			}
 		</script>
 		<div>
 			<h1>图像分类问卷调查</h1>
@@ -84,8 +124,12 @@
 		</div>
 		<div>
 			<br><br>
+			<button id = "btn_hide" type="button" onclick="hideordisp()">隐藏</button>
+		</div>
+		<div>
+			<br><br>
 			<form method="post" action="upform" formenctype="multipart/form-data" enctype="multipart/form-data">
-				选择一个文件: <input type="file" name="img">
+				<input type="file" name="img">
 				<input type="submit">
 			</form>
 		</div>
