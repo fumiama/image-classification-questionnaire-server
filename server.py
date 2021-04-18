@@ -38,10 +38,10 @@ class Resquest(BaseHTTPRequestHandler):
 				all_imgs_list = [name[:-5] for name in os.listdir(image_dir)]
 				all_imgs_len = len(all_imgs_list)
 				if len(voted_imgs_list) < all_imgs_len:
-					pick_img_name = all_imgs_list[random.randint(0, all_imgs_len)]
+					pick_img_name = all_imgs_list[random.randint(0, all_imgs_len-1)]
 					while pick_img_name in voted_imgs_list:
-						pick_img_name = all_imgs_list[random.randint(0, all_imgs_len)]
-					img_path = image_dir + pick_img_name
+						pick_img_name = all_imgs_list[random.randint(0, all_imgs_len-1)]
+					img_path = image_dir + pick_img_name + ".webp"
 					try:
 						with open(img_path, "rb") as f:
 							self.send_200(f.read(), "image/webp")
@@ -56,10 +56,10 @@ class Resquest(BaseHTTPRequestHandler):
 				all_imgs_list = [name[:-5] for name in os.listdir(image_dir)]
 				all_imgs_len = len(all_imgs_list)
 				if len(voted_imgs_list) < all_imgs_len:
-					pick_img_name = all_imgs_list[random.randint(0, all_imgs_len)]
+					pick_img_name = all_imgs_list[random.randint(0, all_imgs_len-1)]
 					while pick_img_name in voted_imgs_list:
-						pick_img_name = all_imgs_list[random.randint(0, all_imgs_len)]
-					self.send_200(urllib.request.quote(pick_img_name[:-5]).encode(), "text/plain")
+						pick_img_name = all_imgs_list[random.randint(0, all_imgs_len-1)]
+					self.send_200(urllib.request.quote(pick_img_name).encode(), "text/plain")
 				else: self.send_200(byte_null, "text/plain")
 			else: self.send_200(byte_erro, "text/plain")
 		elif get_path_len >= 72:		# 投票
