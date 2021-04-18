@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from http.server import HTTPServer, BaseHTTPRequestHandler
-import time, urllib.request, base14, sys, os, cgi, random, img_diff
+import time, urllib.request, base14, sys, os, cgi, random, img_diff, threading, socket
 from hashlib import md5
 from signal import signal, SIGPIPE, SIG_DFL
 
@@ -187,16 +187,35 @@ class Resquest(BaseHTTPRequestHandler):
 			else:  self.send_200(byte_null, "text/plain")
 		else: self.send_200(byte_erro, "text/plain")
 
+# Launch 100 listener threads.
+class Thread(threading.Thread):
+    def __init__(self, i):
+        threading.Thread.__init__(self)
+        self.i = i
+        self.daemon = True
+        self.start()
+    def run(self):
+        httpd = HTTPServer(host, Resquest, False)
+        # Prevent the HTTP server from re-binding every handler.
+        # https://stackoverflow.com/questions/46210672/
+        httpd.socket = sock
+        httpd.server_bind = self.server_close = lambda self: None
+        httpd.serve_forever()
 
 if __name__ == '__main__':
 	if len(sys.argv) == 3:
-		server = HTTPServer(host, Resquest)
 		user_dir = sys.argv[1]
 		image_dir = sys.argv[2]
 		if user_dir[-1] != '/': user_dir += '/'
 		if os.path.exists(image_dir):
 			if image_dir[-1] != '/': image_dir += '/'
 			print("Starting ICQS at: %s:%s" % host, "storage dir:", user_dir, "image dir:", image_dir)
-			server.serve_forever()
+			# Create ONE socket.
+			sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+			sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+			sock.bind(host)
+			sock.listen(5)
+			[Thread(i) for i in range(100)]
+			while True: time.sleep(100000000)		#主进程怠速
 		else: print("Error: image dir", image_dir, "is not exist.")
 	else: print("Usage:", sys.argv[0], "<user_dir> <image_dir>")
