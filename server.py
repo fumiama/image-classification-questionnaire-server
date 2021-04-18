@@ -35,7 +35,7 @@ class Resquest(BaseHTTPRequestHandler):
 			#print("User dir:", user_path)
 			if os.path.exists(user_path):
 				voted_imgs_list = os.listdir(user_path)
-				all_imgs_list = os.listdir(image_dir)
+				all_imgs_list = [name[:-5] for name in os.listdir(image_dir)]
 				all_imgs_len = len(all_imgs_list)
 				if len(voted_imgs_list) < all_imgs_len:
 					pick_img_name = all_imgs_list[random.randint(0, all_imgs_len)]
@@ -53,7 +53,7 @@ class Resquest(BaseHTTPRequestHandler):
 			#print("User dir:", user_path)
 			if os.path.exists(user_path):
 				voted_imgs_list = os.listdir(user_path)
-				all_imgs_list = os.listdir(image_dir)
+				all_imgs_list = [name[:-5] for name in os.listdir(image_dir)]
 				all_imgs_len = len(all_imgs_list)
 				if len(voted_imgs_list) < all_imgs_len:
 					pick_img_name = all_imgs_list[random.randint(0, all_imgs_len)]
