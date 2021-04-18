@@ -4,7 +4,7 @@ import time, urllib.request, base14, sys, os, cgi, random, img_diff
 from hashlib import md5
 from signal import signal, SIGPIPE, SIG_DFL
 
-host = ('localhost', 8847)
+host = ('0.0.0.0', 8847)
 byte_succ = "succ".encode()
 byte_erro = "erro".encode()
 byte_null = "null".encode()
