@@ -69,6 +69,7 @@
 					img_src = document.getElementById("img_display").src;
 					get_data("/vote?uuid=" + user_uuid + "&img=" + img_src.substring(img_src.lastIndexOf('/')+1, img_src.length) + "&class=" + class_val, function rv(t) {
 						alert(t);
+						get_random_img();
 					});
 				} else alert("请登录!");
 			}

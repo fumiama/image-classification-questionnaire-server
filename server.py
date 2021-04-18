@@ -116,47 +116,47 @@ class Resquest(BaseHTTPRequestHandler):
 					#print("skip:", skip)
 					skip += 1
 					next_char = self.rfile.read(1)
-					print("next char:", next_char)
+					#print("next char:", next_char)
 					if next_char == b'C':
 						skip += 1
 						next_char = self.rfile.read(1)
-						print("next char:", next_char)
+						#print("next char:", next_char)
 						if next_char == b'o':
 							skip += 1
 							next_char = self.rfile.read(1)
-							print("next char:", next_char)
+							#print("next char:", next_char)
 							if next_char == b'n':
 								skip += 1
 								next_char = self.rfile.read(1)
-								print("next char:", next_char)
+								#print("next char:", next_char)
 								if next_char == b't':
 									skip += 1
 									next_char = self.rfile.read(1)
-									print("next char:", next_char)
+									#print("next char:", next_char)
 									if next_char == b'e':
 										skip += 1
 										next_char = self.rfile.read(1)
-										print("next char:", next_char)
+										#print("next char:", next_char)
 										if next_char == b'n':
 											skip += 1
 											next_char = self.rfile.read(1)
-											print("next char:", next_char)
+											#print("next char:", next_char)
 											if next_char == b't':
 												skip += 1
 												next_char = self.rfile.read(1)
-												print("next char:", next_char)
+												#print("next char:", next_char)
 												if next_char == b'-':
 													skip += 1
 													next_char = self.rfile.read(1)
-													print("next char:", next_char)
+													#print("next char:", next_char)
 													if next_char == b'T':
 														skip += 1
 														next_char = self.rfile.read(1)
-														print("next char:", next_char)
+														#print("next char:", next_char)
 														if next_char == b'y':
 															skip += 1
 															next_char = self.rfile.read(1)
-															print("next char:", next_char)
+															#print("next char:", next_char)
 															if next_char == b'p':
 																skip += 3
 																self.rfile.read(3)
