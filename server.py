@@ -9,8 +9,6 @@ byte_succ = "succ".encode()
 byte_erro = "erro".encode()
 byte_null = "null".encode()
 
-signal(SIGPIPE, SIG_DFL)		# 忽略管道错误
-
 def get_uuid():
 	return base14.get_base14(md5(str(time.time()).encode()).digest())[:2]
 
@@ -29,7 +27,7 @@ class Resquest(BaseHTTPRequestHandler):
 			new_uuid = get_uuid()
 			os.makedirs(user_dir + new_uuid)
 			self.send_200(new_uuid.encode("utf-8"), "application/octet-stream")
-		elif get_path_len == 10 and get_path == "index.html":
+		elif get_path_len == 0 or (get_path_len == 10 and get_path == "index.html"):
 			with open("./index.html", "rb") as f:
 				self.send_200(f.read(), "text/html")
 		elif get_path_len == 25 and get_path[:6] == "pickdl":
@@ -189,18 +187,19 @@ class Resquest(BaseHTTPRequestHandler):
 
 # Launch 100 listener threads.
 class Thread(threading.Thread):
-    def __init__(self, i):
-        threading.Thread.__init__(self)
-        self.i = i
-        self.daemon = True
-        self.start()
-    def run(self):
-        httpd = HTTPServer(host, Resquest, False)
-        # Prevent the HTTP server from re-binding every handler.
-        # https://stackoverflow.com/questions/46210672/
-        httpd.socket = sock
-        httpd.server_bind = self.server_close = lambda self: None
-        httpd.serve_forever()
+	def __init__(self, i):
+		threading.Thread.__init__(self)
+		self.i = i
+		signal(SIGPIPE, SIG_DFL)		# 忽略管道错误
+		self.daemon = True
+		self.start()
+	def run(self):
+		self.httpd = HTTPServer(host, Resquest, False)
+		# Prevent the HTTP server from re-binding every handler.
+		# https://stackoverflow.com/questions/46210672/
+		self.httpd.socket = sock
+		self.httpd.server_bind = self.server_close = lambda self: None
+		self.httpd.serve_forever()
 
 if __name__ == '__main__':
 	if len(sys.argv) == 3:
@@ -216,6 +215,13 @@ if __name__ == '__main__':
 			sock.bind(host)
 			sock.listen(5)
 			[Thread(i) for i in range(100)]
-			while True: time.sleep(100000000)		#主进程怠速
+			#主进程也开启一个服务
+			signal(SIGPIPE, SIG_DFL)		# 忽略管道错误
+			httpd = HTTPServer(host, Resquest, False)
+			# Prevent the HTTP server from re-binding every handler.
+			# https://stackoverflow.com/questions/46210672/
+			httpd.socket = sock
+			httpd.server_bind = lambda self: None
+			httpd.serve_forever()
 		else: print("Error: image dir", image_dir, "is not exist.")
 	else: print("Usage:", sys.argv[0], "<user_dir> <image_dir>")
