@@ -4,7 +4,7 @@ import time, urllib.request, base14, sys, os, cgi, random, img_diff
 from hashlib import md5
 from signal import signal, SIGPIPE, SIG_DFL
 
-host = ('0.0.0.0', 8847)
+host = ('0.0.0.0', 80)
 byte_succ = "succ".encode()
 byte_erro = "erro".encode()
 byte_null = "null".encode()
@@ -108,27 +108,84 @@ class Resquest(BaseHTTPRequestHandler):
 			else:  self.send_200(byte_null, "text/plain")
 		elif self.path == "/upform":							#表单上传图片
 			size = int(self.headers.get('content-length'))
-			head = self.rfile.read(133)
-			file_type = self.rfile.read(10).decode()
-			if file_type == "image/webp":
-				self.rfile.read(4)
-				datas = self.rfile.read(size - 147 - 46)		#掐头去尾
-				fname = img_diff.get_dhash_b14(datas)
-				no_similar = True
-				all_imgs_list = os.listdir(image_dir)
-				for img_name in all_imgs_list:
-					if img_diff.hamm_img(img_diff.decode_dhash(fname), img_diff.decode_dhash(img_name)) <= 3:
-						no_similar = False
-						break
-				if no_similar:
-					print("Recv file:", fname)
-					fn = os.path.join(image_dir, fname + ".webp")	#生成文件存储路径
-					if not os.path.exists(fn):
-						with open(fn, 'wb') as f: f.write(datas)	#将接收到的内容写入文件
-						self.send_200(byte_succ, "text/plain")
-					else: self.send_200(byte_erro, "text/plain")
-				else:  self.send_200(byte_null, "text/plain")
-			else: self.send_200(byte_erro, "text/plain")
+			#with open(user_dir + "test.bin", "wb") as f:
+			#	f.write(self.rfile.read(size))
+			skip = 0
+			if size > 1024:
+				while skip < 1024:
+					#print("skip:", skip)
+					skip += 1
+					next_char = self.rfile.read(1)
+					print("next char:", next_char)
+					if next_char == b'C':
+						skip += 1
+						next_char = self.rfile.read(1)
+						print("next char:", next_char)
+						if next_char == b'o':
+							skip += 1
+							next_char = self.rfile.read(1)
+							print("next char:", next_char)
+							if next_char == b'n':
+								skip += 1
+								next_char = self.rfile.read(1)
+								print("next char:", next_char)
+								if next_char == b't':
+									skip += 1
+									next_char = self.rfile.read(1)
+									print("next char:", next_char)
+									if next_char == b'e':
+										skip += 1
+										next_char = self.rfile.read(1)
+										print("next char:", next_char)
+										if next_char == b'n':
+											skip += 1
+											next_char = self.rfile.read(1)
+											print("next char:", next_char)
+											if next_char == b't':
+												skip += 1
+												next_char = self.rfile.read(1)
+												print("next char:", next_char)
+												if next_char == b'-':
+													skip += 1
+													next_char = self.rfile.read(1)
+													print("next char:", next_char)
+													if next_char == b'T':
+														skip += 1
+														next_char = self.rfile.read(1)
+														print("next char:", next_char)
+														if next_char == b'y':
+															skip += 1
+															next_char = self.rfile.read(1)
+															print("next char:", next_char)
+															if next_char == b'p':
+																skip += 3
+																self.rfile.read(3)
+																self.do_form_post(size, skip)
+																break
+	def do_form_post(self, size, skip):
+		skip += 10
+		file_type = self.rfile.read(10).decode()
+		print("post form type:", file_type)
+		if file_type == "image/webp":
+			skip += 4
+			self.rfile.read(4)
+			datas = self.rfile.read(size - skip - 46)		#掐头去尾
+			fname = img_diff.get_dhash_b14(datas)
+			no_similar = True
+			all_imgs_list = os.listdir(image_dir)
+			for img_name in all_imgs_list:
+				if img_diff.hamm_img(img_diff.decode_dhash(fname), img_diff.decode_dhash(img_name)) <= 3:
+					no_similar = False
+					break
+			if no_similar:
+				print("Recv file:", fname)
+				fn = os.path.join(image_dir, fname + ".webp")	#生成文件存储路径
+				if not os.path.exists(fn):
+					with open(fn, 'wb') as f: f.write(datas)	#将接收到的内容写入文件
+					self.send_200(byte_succ, "text/plain")
+				else: self.send_200(byte_erro, "text/plain")
+			else:  self.send_200(byte_null, "text/plain")
+		else: self.send_200(byte_erro, "text/plain")
 
 
 if __name__ == '__main__':
