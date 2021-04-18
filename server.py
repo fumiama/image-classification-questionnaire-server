@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 from http.server import HTTPServer, BaseHTTPRequestHandler
-import time, urllib.request, base14, sys, os, cgi, random
+import time, urllib.request, base14, sys, os, cgi, random, img_diff
 from hashlib import md5
+from signal import signal, SIGPIPE, SIG_DFL
 
 host = ('localhost', 8847)
 byte_succ = "succ".encode()
 byte_erro = "erro".encode()
 byte_null = "null".encode()
+
+signal(SIGPIPE, SIG_DFL)		# 忽略管道错误
 
 def get_uuid():
 	return base14.get_base14(md5(str(time.time()).encode()).digest())[:2]
@@ -66,15 +69,15 @@ class Resquest(BaseHTTPRequestHandler):
 				try:
 					cli_req = get_path[5:]
 					cli_uuid = urllib.request.unquote(cli_req[5:23])
-					cli_img = urllib.request.unquote(cli_req[28:64])
-					cli_cls = cli_req[71:]
+					cli_img = urllib.request.unquote(cli_req[28:73])
+					cli_cls = cli_req[80:]
 					print("uuid:", cli_uuid, "img:", cli_img, "class:", cli_cls)
 					cli_dir = user_dir + cli_uuid + '/'
 					os.makedirs(cli_dir, exist_ok=True)
 					with open(cli_dir + cli_img, "w") as f: f.write(cli_cls)
 					self.send_200(byte_succ, "text/plain")
 				except: self.send_200(byte_erro, "text/plain")
-		elif get_path_len == 36:
+		elif get_path_len == 45:
 			img_path = image_dir + urllib.request.unquote(get_path) + ".webp"
 			#print("Get img:", img_path)
 			if os.path.exists(img_path):
@@ -88,13 +91,45 @@ class Resquest(BaseHTTPRequestHandler):
 	def do_POST(self):
 		if self.path == "/upload":							#上传图片
 			datas = self.rfile.read(int(self.headers.get('content-length')))
-			fname = base14.get_base14(md5(datas).digest())[:4] + ".webp"
-			print("Recv file:", fname)
-			fn = os.path.join(image_dir, fname)				#生成文件存储路径
-			if not os.path.exists(fn):
-				with open(fn, 'wb') as f: f.write(datas)	#将接收到的内容写入文件
-				self.send_200(byte_succ, "text/plain")
+			fname = img_diff.get_dhash_b14(datas)
+			no_similar = True
+			all_imgs_list = os.listdir(image_dir)
+			for img_name in all_imgs_list:
+				if img_diff.hamm_img(img_diff.decode_dhash(fname), img_diff.decode_dhash(img_name)) <= 3:
+					no_similar = False
+					break
+			if no_similar:
+				print("Recv file:", fname)
+				fn = os.path.join(image_dir, fname + ".webp")	#生成文件存储路径
+				if not os.path.exists(fn):
+					with open(fn, 'wb') as f: f.write(datas)	#将接收到的内容写入文件
+					self.send_200(byte_succ, "text/plain")
+				else: self.send_200(byte_erro, "text/plain")
+			else:  self.send_200(byte_null, "text/plain")
+		elif self.path == "/upform":							#表单上传图片
+			size = int(self.headers.get('content-length'))
+			head = self.rfile.read(133)
+			file_type = self.rfile.read(10).decode()
+			if file_type == "image/webp":
+				self.rfile.read(4)
+				datas = self.rfile.read(size - 147 - 46)		#掐头去尾
+				fname = img_diff.get_dhash_b14(datas)
+				no_similar = True
+				all_imgs_list = os.listdir(image_dir)
+				for img_name in all_imgs_list:
+					if img_diff.hamm_img(img_diff.decode_dhash(fname), img_diff.decode_dhash(img_name)) <= 3:
+						no_similar = False
+						break
+				if no_similar:
+					print("Recv file:", fname)
+					fn = os.path.join(image_dir, fname + ".webp")	#生成文件存储路径
+					if not os.path.exists(fn):
+						with open(fn, 'wb') as f: f.write(datas)	#将接收到的内容写入文件
+						self.send_200(byte_succ, "text/plain")
+					else: self.send_200(byte_erro, "text/plain")
+				else:  self.send_200(byte_null, "text/plain")
 			else: self.send_200(byte_erro, "text/plain")
+
 
 if __name__ == '__main__':
 	if len(sys.argv) == 3:
@@ -107,3 +142,4 @@ if __name__ == '__main__':
 			print("Starting ICQS at: %s:%s" % host, "storage dir:", user_dir, "image dir:", image_dir)
 			server.serve_forever()
 		else: print("Error: image dir", image_dir, "is not exist.")
+	else: print("Usage:", sys.argv[0], "<user_dir> <image_dir>")

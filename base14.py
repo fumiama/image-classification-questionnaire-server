@@ -1,14 +1,29 @@
 #!/usr/bin/env python3
-from ctypes import CDLL, c_void_p, c_char_p, c_uint64, POINTER, Structure, string_at
+from ctypes import CDLL, c_void_p, c_char_p, c_uint64, c_uint32, POINTER, Structure, string_at
+import platform, os
 
 dllpath = './build/libbase14.so'
 dll = CDLL(dllpath)
 
-class LENDAT(Structure):
-    _fields_=[('data',c_void_p),
-             ('len',c_uint64)]
+def machine():
+    """Return type ofmachine."""
+    if os.name == 'nt' and sys.version_info[:2] < (2,7):
+        returnos.environ.get("PROCESSOR_ARCHITEW6432",
+                os.environ.get('PROCESSOR_ARCHITECTURE',''))
+    else:
+        return platform.machine()
 
-dll.encode.restype = POINTER(LENDAT)#确定test这个函数的返回值的类型
+def os_bits(machine=machine()):
+    """Return bitness ofoperating system, or None if unknown."""
+    machine2bits = {'AMD64':64, 'x86_64': 64, 'i386': 32, 'x86': 32}
+    return machine2bits.get(machine, None)
+
+class LENDAT(Structure):
+    _fields_=[('data', c_void_p),
+             ('len', c_uint64 if os_bits() == 64 else c_uint32)]
+
+dll.encode.restype = POINTER(LENDAT)
+dll.decode.restype = POINTER(LENDAT)
 
 def get_base14(byte_str):
     byte_len = len(byte_str)
@@ -19,3 +34,10 @@ def get_base14(byte_str):
     #print("encode length:", encl, len(encd))
     #print(encd.decode("utf-16-be"))
     return encd.decode("utf-16-be")
+
+def from_base14(utf16be_byte_str):
+    byte_len = len(utf16be_byte_str)
+    t = dll.decode(utf16be_byte_str, byte_len)
+    decl = t.contents.len
+    decd = string_at(t.contents.data, decl)
+    return decd

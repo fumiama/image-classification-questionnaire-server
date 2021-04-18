@@ -40,29 +40,29 @@ make
 
 ### 2. 指定分类(投票)
 
-格式: http://[server_domain]/vote?uuid=用户&img=投票图片&class=n
+格式: http://[server_domain]/vote?uuid=用户&img=投票的图片&class=n
 
 返回: 成功(succ)，错误(erro)
 
 说明:
 
 1. `uuid`字段容纳两(数量不可增减)个`utf-8`编码的汉字，表示投票用户。
-2. `img`字段容纳四个(数量不可增减)`utf-8`编码的汉字，唯一标识了这张图片。
+2. `img`字段容纳五个(数量不可增减)`utf-8`编码的汉字，唯一标识了这张图片。
 3. `class`字段容纳任意数量的`ASCII`编码，代表该图片所属标签。
 
 ### 3. 下载图片
 
-格式: http://[server_domain]/目标图片
+格式: http://[server_domain]/目标的图片
 
 返回: 成功(图片数据)，空(null)，错误(erro)
 
-说明: `目标图片`是四个(数量不可增减)`utf-8`编码的汉字，唯一标识了这张图片。
+说明: `目标的图片`是五个(数量不可增减)`utf-8`编码的汉字，唯一标识了这张图片。
 
 ### 4. 上传图片
 
 格式: `HTTP POST`到http://[server_domain]/upload
 
-返回: 成功(succ)，错误(erro)
+返回: 成功(succ)，错误(erro)，图片相似(null)
 
 说明: 图片必须为`webp`格式。使用`wget`时，可使用如下命令。
 
