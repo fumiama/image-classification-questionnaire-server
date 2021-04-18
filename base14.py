@@ -2,8 +2,16 @@
 from ctypes import CDLL, c_void_p, c_char_p, c_uint64, c_uint32, POINTER, Structure, string_at
 import platform, os
 
-dllpath = './build/libbase14.so'
-dll = CDLL(dllpath)
+#dllpath = './build/libbase14.so'
+#dll = CDLL(dllpath)
+
+global dll
+
+def init_dll(dll_pth):
+    global dll
+    dll = CDLL(dll_pth)
+    dll.encode.restype = POINTER(LENDAT)
+    dll.decode.restype = POINTER(LENDAT)
 
 def machine():
     """Return type ofmachine."""
@@ -22,10 +30,8 @@ class LENDAT(Structure):
     _fields_=[('data', c_void_p),
              ('len', c_uint64 if os_bits() == 64 else c_uint32)]
 
-dll.encode.restype = POINTER(LENDAT)
-dll.decode.restype = POINTER(LENDAT)
-
 def get_base14(byte_str):
+    global dll
     byte_len = len(byte_str)
     #print("data length:", byte_len)
     t = dll.encode(byte_str, byte_len)
@@ -36,6 +42,7 @@ def get_base14(byte_str):
     return encd.decode("utf-16-be")
 
 def from_base14(utf16be_byte_str):
+    global dll
     byte_len = len(utf16be_byte_str)
     t = dll.decode(utf16be_byte_str, byte_len)
     decl = t.contents.len

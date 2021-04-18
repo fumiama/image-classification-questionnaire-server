@@ -9,6 +9,8 @@ byte_succ = "succ".encode()
 byte_erro = "erro".encode()
 byte_null = "null".encode()
 
+base14.init_dll('./build/libbase14.so')
+
 def get_uuid():
 	return base14.get_base14(md5(str(time.time()).encode()).digest())[:2]
 

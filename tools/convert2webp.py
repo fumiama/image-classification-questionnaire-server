@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
-
 import glob, os, threading, sys
 from PIL import Image
-
+'''
+多线程批量转换某文件夹下的图片到webp
+第一个参数是待转换图片的文件夹，第二个参数是输出文件夹
+待转换图片的文件夹内可以有其他文件
+'''
 def create_image(infile, outfolder):
     split_fn = os.path.splitext(os.path.basename(infile))
     with Image.open(infile) as im:

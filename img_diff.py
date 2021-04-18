@@ -3,6 +3,8 @@ import imagehash, base14, binascii, io
 
 last_char = '㴁'
 
+#base14.init_dll('./build/libbase14.so')
+
 def get_dhash_b14(data):
     return base14.get_base14(binascii.a2b_hex(str(imagehash.dhash(Image.open(io.BytesIO(data))))))[:-1]
 

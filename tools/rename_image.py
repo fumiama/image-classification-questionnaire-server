@@ -6,6 +6,8 @@ from hashlib import md5
 以和服务器命名规则相同的格式批量重命名给定文件夹下的所有文件
 该文件下只能存在图片文件，否则会报错
 '''
+base14.init_dll('../build/libbase14.so')
+
 if __name__ == "__main__":
     if len(sys.argv) == 2:
         work_dir = sys.argv[1]
