@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 import os, sys, stat
-
+'''
+生成unix下的脚本文件实现批量post图片
+第一个参数为图片所在文件夹，第二个参数为post url
+'''
 if __name__ == "__main__":
     if len(sys.argv) == 3:
         parent_dir = sys.argv[1]
