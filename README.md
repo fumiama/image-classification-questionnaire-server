@@ -37,7 +37,7 @@ sudo nohup ./daemon.sh &
 
 注意:
 
-1. 图片扩展名只接受`.webp`，如需其它格式请自行修改代码。
+1. 服务端图片扩展名只接受`.webp`，客户端上传时任意。如需其它格式请自行修改代码。
 2. 图片的唯一标识使用了该图片`dhash`值的`base16384`编码的前五个汉字。
 
 ### 0. 直接访问
@@ -78,7 +78,7 @@ sudo nohup ./daemon.sh &
 
 返回: 成功(succ)，错误(erro)，图片相似(null)
 
-说明: 图片必须为`webp`格式。使用`wget`时，可使用如下命令。
+说明: 必须为`webp`、`jpg`或`png`格式。使用`wget`时，可使用如下命令。
 
 ```bash
 wget --post-file=image.webp http://[server_domain]/upload
