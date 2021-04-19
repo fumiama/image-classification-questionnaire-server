@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 from http.server import HTTPServer, BaseHTTPRequestHandler
-import time, urllib.request, base14, sys, os, cgi, random, img_diff, threading, socket
+import time, urllib.request, base14, sys, os, cgi, random, img_diff, threading, socket, io, form_fsm, shutil
 from hashlib import md5
 from signal import signal, SIGPIPE, SIG_DFL
+from PIL import Image
 
 host = ('0.0.0.0', 80)
 byte_succ = "succ".encode()
@@ -108,71 +109,56 @@ class Resquest(BaseHTTPRequestHandler):
 			size = int(self.headers.get('content-length'))
 			skip = 0
 			if size > 1024:
+				state = 0
 				while skip < 1024:
 					skip += 1
-					next_char = self.rfile.read(1)
-					if next_char == b'C':
-						skip += 1
-						next_char = self.rfile.read(1)	
-						if next_char == b'o':
-							skip += 1
-							next_char = self.rfile.read(1)		
-							if next_char == b'n':
-								skip += 1
-								next_char = self.rfile.read(1)			
-								if next_char == b't':
-									skip += 1
-									next_char = self.rfile.read(1)				
-									if next_char == b'e':
-										skip += 1
-										next_char = self.rfile.read(1)					
-										if next_char == b'n':
-											skip += 1
-											next_char = self.rfile.read(1)						
-											if next_char == b't':
-												skip += 1
-												next_char = self.rfile.read(1)							
-												if next_char == b'-':
-													skip += 1
-													next_char = self.rfile.read(1)								
-													if next_char == b'T':
-														skip += 1
-														next_char = self.rfile.read(1)									
-														if next_char == b'y':
-															skip += 1
-															next_char = self.rfile.read(1)										
-															if next_char == b'p':
-																skip += 3
-																self.rfile.read(3)
-																self.do_form_post(size, skip)
-																break
+					state = form_fsm.scan(state, self.rfile.read(1))
+					if state == 11:
+						skip += 3
+						self.rfile.read(3)
+						self.do_form_post(size, skip)
+						break
 		else: self.send_200(byte_null, "text/plain")
 
 	def do_form_post(self, size, skip):
-		skip += 10
-		file_type = self.rfile.read(10).decode()
+		skip += 9
+		file_type = self.rfile.read(9).decode()
 		print("post form type:", file_type)
-		if file_type == "image/webp":
-			skip += 4
-			self.rfile.read(4)
+		if file_type == "image/web" or file_type == "image/png" or file_type == "image/jpe":
+			if file_type == "image/png":
+				skip += 4
+				self.rfile.read(4)
+			else:
+				skip += 5
+				self.rfile.read(5)
 			datas = self.rfile.read(size - skip - 46)		#掐头去尾
 			self.save_img(datas)
 		else: self.send_200(byte_erro, "text/plain")
 	
 	def save_img(self, datas):
-		fname = img_diff.get_dhash_b14(datas)
+		is_converted = False
+		with Image.open(io.BytesIO(datas)) as img2save:
+			if img2save.format != "WEBP":		#转换webp
+				converted = io.BytesIO()
+				img2save.save(converted, "WEBP")
+				converted.seek(0)
+				is_converted = True
+		fname = img_diff.get_dhash_b14_io(converted) if is_converted else img_diff.get_dhash_b14(datas) 
 		no_similar = True
 		all_imgs_list = os.listdir(image_dir)
 		this_hash = img_diff.decode_dhash(fname)
+		hash_len = len(this_hash)
 		for img_name in all_imgs_list:
-			if img_diff.hamm_img(this_hash, img_diff.decode_dhash(img_name)) <= 3:
+			if img_diff.hamm_img(this_hash, img_diff.decode_dhash(img_name), hash_len) <= 12:
 				no_similar = False
 				break
 		if no_similar:
 			print("Recv file:", fname)
 			fn = os.path.join(image_dir, fname + ".webp")	#生成文件存储路径
 			if not os.path.exists(fn):
-				with open(fn, 'wb') as f: f.write(datas)	#将接收到的内容写入文件
+				if is_converted: converted.seek(0)
+				with open(fn, 'wb') as f: shutil.copyfileobj(converted, f) if is_converted else f.write(datas)
+				if is_converted: converted.close()
 				self.send_200(byte_succ, "text/plain")
 			else: self.send_200(byte_erro, "text/plain")
 		else:  self.send_200(byte_null, "text/plain")
