@@ -19,6 +19,20 @@ cmake ..
 make
 ```
 
+你还需要安装`pillow`，`numba`，`imagehash`以确保程序运行。
+
+# 开始使用
+
+如果你是`ubuntu`用户，由于该系统绑定端口需要`root`权限，因此可以直接运行写好的`daemon.sh`以确保服务一直后台运行。
+
+如果不是，为安全起见，你需要删除`daemon.sh`中的全部`sudo`，并运行以下命令。
+
+如果想要自定义图片/用户文件夹，更改`daemon.sh`中的相关语句即可。
+
+```bash
+sudo nohup ./daemon.sh &
+```
+
 # API
 
 注意:
