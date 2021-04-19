@@ -133,3 +133,4 @@ post_all.sh
 /imgs
 /users
 .DS_Store
+pwd.txt

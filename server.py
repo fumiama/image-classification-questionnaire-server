@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from http.server import HTTPServer, BaseHTTPRequestHandler
-import time, urllib.request, base14, sys, os, cgi, random, img_diff, threading, socket, io, form_fsm, shutil
+import urllib.request, base14, sys, os, cgi, random, img_diff, threading, socket, io, form_fsm, shutil
+from time import time
 from hashlib import md5
 from signal import signal, SIGPIPE, SIG_DFL
 from PIL import Image
@@ -13,7 +14,7 @@ byte_null = "null".encode()
 base14.init_dll('./build/libbase14.so')
 
 def get_uuid():
-	return base14.get_base14(md5(str(time.time()).encode()).digest())[:2]
+	return base14.get_base14(md5(str(time()).encode()).digest())[:2]
 
 class Resquest(BaseHTTPRequestHandler):
 	def send_200(self, data, content_type):
@@ -26,10 +27,14 @@ class Resquest(BaseHTTPRequestHandler):
 		get_path = self.path[1:]
 		get_path_len = len(get_path)
 		#print("get_path_len:", get_path_len)
-		if get_path_len == 6 and get_path == "signup":	# 注册
-			new_uuid = get_uuid()
-			os.makedirs(user_dir + new_uuid)
-			self.send_200(new_uuid.encode("utf-8"), "application/octet-stream")
+		if get_path_len == 17 and get_path[:6] == "signup":	# 注册
+			try:
+				if abs(int(time()) - (int(get_path[7:]) ^ pwd)) <= 10:		#验证通过
+					new_uuid = get_uuid()
+					os.makedirs(user_dir + new_uuid)
+					self.send_200(new_uuid.encode("utf-8"), "application/octet-stream")
+				else: self.send_200(byte_null, "text/plain")
+			except: self.send_200(byte_erro, "text/plain")
 		elif get_path_len == 0 or (get_path_len == 10 and get_path == "index.html"):
 			with open("./index.html", "rb") as f:
 				self.send_200(f.read(), "text/html")
@@ -180,9 +185,12 @@ class Thread(threading.Thread):
 		self.httpd.serve_forever()
 
 if __name__ == '__main__':
-	if len(sys.argv) == 3:
+	if len(sys.argv) == 4 or len(sys.argv) == 5:
 		user_dir = sys.argv[1]
 		image_dir = sys.argv[2]
+		with open(sys.argv[3], "rb") as f:
+			pwd = int.from_bytes(f.read()[2:], byteorder="big")		#两个汉字，四个字节
+		if len(sys.argv) == 5: server_uid = int(sys.argv[4])
 		if user_dir[-1] != '/': user_dir += '/'
 		if os.path.exists(image_dir):
 			if image_dir[-1] != '/': image_dir += '/'
@@ -192,6 +200,7 @@ if __name__ == '__main__':
 			sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 			sock.bind(host)
 			sock.listen(5)
+			if len(sys.argv) == 5: os.setuid(server_uid)		#监听后降权
 			[Thread(i) for i in range(100)]
 			#主进程也开启一个服务
 			signal(SIGPIPE, SIG_DFL)		# 忽略管道错误
@@ -200,4 +209,4 @@ if __name__ == '__main__':
 			httpd.server_bind = lambda self: None
 			httpd.serve_forever()
 		else: print("Error: image dir", image_dir, "is not exist.")
-	else: print("Usage:", sys.argv[0], "<user_dir> <image_dir>")
+	else: print("Usage:", sys.argv[0], "<user_dir> <image_dir> <pwd_path> (server_uid)")

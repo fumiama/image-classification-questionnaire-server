@@ -48,9 +48,12 @@ sudo nohup ./daemon.sh &
 
 ### 1. 注册用户
 
-格式: http://[server_domain]/signup
+格式: http://[server_domain]/signup?1234567890
 
-说明: 返回`utf-8`编码的两个汉字，代表下面用到的`uuid`
+说明:
+
+1. 返回`utf-8`编码的两个汉字，代表下面用到的`uuid`
+2. 后跟10位整数，表示密码与当前秒数异或的结果，与服务端相差10秒内有效
 
 ### 2. 指定分类(投票)
 
