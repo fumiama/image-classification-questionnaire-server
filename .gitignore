@@ -130,3 +130,6 @@ dmypy.json
 
 test.py
 post_all.sh
+/imgs
+/users
+.DS_Store
