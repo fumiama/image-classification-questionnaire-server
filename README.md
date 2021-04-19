@@ -23,22 +23,29 @@ make
 
 # 开始使用
 
-如果你是`ubuntu`用户，由于该系统绑定端口需要`root`权限，因此可以直接运行写好的`daemon.sh`以确保服务一直后台运行。
-
-如果不是，为安全起见，你需要删除`daemon.sh`中的全部`sudo`，并运行以下命令。
-
-如果想要自定义图片/用户文件夹，更改`daemon.sh`中的相关语句即可。
+1. 如果你是`ubuntu`用户，由于该系统绑定端口需要`root`权限，因此可以直接运行写好的`daemon.sh`以确保服务一直后台运行。
+2. 如果不是，为安全起见，你需要删除`daemon.sh`中的全部`sudo`，及以下命令开头的`dudo`  后运行。
+3. 如果想要自定义图片/用户文件夹/密码，更改`daemon.sh`中的相关语句即可。
+4. 密码文件必须为以`UTF16BE`编码存储的两个汉字，包括文件头`0xfeff`。
 
 ```bash
 sudo nohup ./daemon.sh &
 ```
 
-# API
+`server.py`的语法如下
+
+```bash
+./server.py <user_dir> <image_dir> <pwd_path> (server_uid)
+```
+
+其中`server_uid`为可选项。如果设置，程序将会在绑定端口后切换到该`uid`处理请求。
 
 注意:
 
 1. 服务端图片扩展名只接受`.webp`，客户端上传时任意。如需其它格式请自行修改代码。
 2. 图片的唯一标识使用了该图片`dhash`值的`base16384`编码的前五个汉字。
+
+# API
 
 ### 0. 直接访问
 
@@ -49,6 +56,8 @@ sudo nohup ./daemon.sh &
 ### 1. 注册用户
 
 格式: http://[server_domain]/signup?1234567890
+
+返回: 成功(succ)，密码错误(null)，处理错误(erro)
 
 说明:
 
