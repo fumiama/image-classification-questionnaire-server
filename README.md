@@ -77,14 +77,14 @@ sudo nohup ./daemon.sh &
 
 ### 4. 上传图片
 
-格式: `HTTP POST`到http://[server_domain]/upload
+格式: `HTTP POST`到http://[server_domain]/upload?uuid=用户
 
-返回: 成功(succ)，错误(erro)，图片相似(null)
+返回: 成功(succ)，错误(erro)，图片相似/无此用户(null)
 
 说明: 必须为`webp`、`jpg`或`png`格式。使用`wget`时，可使用如下命令。
 
 ```bash
-wget --post-file=image.webp http://[server_domain]/upload
+wget --post-file=image.webp http://[server_domain]/upload?uuid=用户
 ```
 
 ### 5. 从未投票图片中随机选择图片并返回图片数据
