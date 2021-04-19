@@ -112,7 +112,7 @@ class Resquest(BaseHTTPRequestHandler):
 				state = 0
 				while skip < 1024:
 					skip += 1
-					state = form_fsm.scan(state, self.rfile.read(1))
+					state = form_fsm.scan(state, self.rfile.read(1)[0])
 					if state == 11:
 						skip += 3
 						self.rfile.read(3)

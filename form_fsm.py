@@ -1,16 +1,16 @@
-from numba import jit, int32
+from numba import jit, uint8
 
-@jit
+@jit(uint8(uint8, uint8))
 def scan(state, next_char):
-	if state == 0 and next_char == b'C': state += 1
-	elif state == 1 and next_char == b'o': state += 1
-	elif state == 2 and next_char == b'n': state += 1
-	elif state == 3 and next_char == b't': state += 1
-	elif state == 4 and next_char == b'e': state += 1
-	elif state == 5 and next_char == b'n': state += 1
-	elif state == 6 and next_char == b't': state += 1
-	elif state == 7 and next_char == b'-': state += 1
-	elif state == 8 and next_char == b'T': state += 1
-	elif state == 9 and next_char == b'y': state += 1
-	elif state == 10 and next_char == b'p': state += 1
+	if state == 0 and next_char == 67: state = 1
+	elif state == 1 and next_char == 111: state = 2
+	elif state == 2 and next_char == 110: state = 3
+	elif state == 3 and next_char == 116: state = 4
+	elif state == 4 and next_char == 101: state = 5
+	elif state == 5 and next_char == 110: state = 6
+	elif state == 6 and next_char == 116: state = 7
+	elif state == 7 and next_char == 45: state = 8
+	elif state == 8 and next_char == 84: state = 9
+	elif state == 9 and next_char == 121: state = 10
+	elif state == 10 and next_char == 112: state = 11
 	return state
