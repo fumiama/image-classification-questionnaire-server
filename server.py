@@ -210,8 +210,7 @@ if __name__ == '__main__':
 			if os.fork() == 0:		#创建daemon
 				os.setsid()
 				#创建孙子进程，而后子进程退出
-				if os.fork() > 0:
-   		 			sys.exit(0)
+				if os.fork() > 0: sys.exit(0)
 				#重定向标准输入流、标准输出流、标准错误
 				sys.stdout.flush()
 				sys.stderr.flush()
