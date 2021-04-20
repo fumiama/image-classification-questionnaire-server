@@ -1,10 +1,16 @@
 #!/usr/bin/env python3
 from http.server import HTTPServer, BaseHTTPRequestHandler
-import urllib.request, base14, sys, os, cgi, random, img_diff, threading, socket, io, form_fsm, shutil
+from random import randint
+from io import BytesIO
+from shutil import copyfileobj
+import threading
+from socket import socket, AF_INET, SOCK_STREAM, SOL_SOCKET, SO_REUSEADDR
+from urllib.request import quote, unquote
 from time import time
 from hashlib import md5
 from signal import signal, SIGPIPE, SIG_DFL
 from PIL import Image
+import base14, sys, os, img_diff, form_fsm
 
 host = ('0.0.0.0', 80)
 byte_succ = "succ".encode()
@@ -39,7 +45,7 @@ class Resquest(BaseHTTPRequestHandler):
 			with open("./index.html", "rb") as f:
 				self.send_200(f.read(), "text/html")
 		elif get_path_len == 25 and get_path[:6] == "pickdl":
-			user_uuid = urllib.request.unquote(get_path[7:])
+			user_uuid = unquote(get_path[7:])
 			if len(user_uuid) == 2:		#base14检测
 				user_path = user_dir + user_uuid +'/'
 				#print("User dir:", user_path)
@@ -48,9 +54,9 @@ class Resquest(BaseHTTPRequestHandler):
 					all_imgs_list = [name[:-5] for name in os.listdir(image_dir)]
 					all_imgs_len = len(all_imgs_list)
 					if len(voted_imgs_list) < all_imgs_len:
-						pick_img_name = all_imgs_list[random.randint(0, all_imgs_len-1)]
+						pick_img_name = all_imgs_list[randint(0, all_imgs_len-1)]
 						while pick_img_name in voted_imgs_list:
-							pick_img_name = all_imgs_list[random.randint(0, all_imgs_len-1)]
+							pick_img_name = all_imgs_list[randint(0, all_imgs_len-1)]
 						img_path = image_dir + pick_img_name + ".webp"
 						try:
 							with open(img_path, "rb") as f:
@@ -60,7 +66,7 @@ class Resquest(BaseHTTPRequestHandler):
 				else: self.send_200(byte_erro, "text/plain")
 			else: self.send_200(byte_erro, "text/plain")
 		elif get_path_len == 23 and get_path[:4] == "pick":
-			user_uuid = urllib.request.unquote(get_path[5:])
+			user_uuid = unquote(get_path[5:])
 			if len(user_uuid) == 2:		#base14检测
 				user_path = user_dir + user_uuid +'/'
 				#print("User dir:", user_path)
@@ -69,10 +75,10 @@ class Resquest(BaseHTTPRequestHandler):
 					all_imgs_list = [name[:-5] for name in os.listdir(image_dir)]
 					all_imgs_len = len(all_imgs_list)
 					if len(voted_imgs_list) < all_imgs_len:
-						pick_img_name = all_imgs_list[random.randint(0, all_imgs_len-1)]
+						pick_img_name = all_imgs_list[randint(0, all_imgs_len-1)]
 						while pick_img_name in voted_imgs_list:
-							pick_img_name = all_imgs_list[random.randint(0, all_imgs_len-1)]
-						self.send_200(urllib.request.quote(pick_img_name).encode(), "text/plain")
+							pick_img_name = all_imgs_list[randint(0, all_imgs_len-1)]
+						self.send_200(quote(pick_img_name).encode(), "text/plain")
 					else: self.send_200(byte_null, "text/plain")
 				else: self.send_200(byte_erro, "text/plain")
 			else: self.send_200(byte_erro, "text/plain")
@@ -80,9 +86,9 @@ class Resquest(BaseHTTPRequestHandler):
 			if get_path_len > 4 and get_path[:4] == "vote":
 				try:
 					cli_req = get_path[5:]
-					cli_uuid = urllib.request.unquote(cli_req[5:23])
+					cli_uuid = unquote(cli_req[5:23])
 					if len(cli_uuid) == 2:			#base14检测
-						cli_img = urllib.request.unquote(cli_req[28:73])
+						cli_img = unquote(cli_req[28:73])
 						if len(cli_img) == 5:		#base14检测
 							cli_cls = cli_req[80:]
 							print("uuid:", cli_uuid, "img:", cli_img, "class:", cli_cls)
@@ -94,7 +100,7 @@ class Resquest(BaseHTTPRequestHandler):
 					else: self.send_200(byte_erro, "text/plain")
 				except: self.send_200(byte_erro, "text/plain")
 		elif get_path_len == 45:
-			target_img_name = urllib.request.unquote(get_path)
+			target_img_name = unquote(get_path)
 			if len(target_img_name) == 5:		#base14检测
 				img_path = image_dir + target_img_name + ".webp"
 				#print("Get img:", img_path)
@@ -110,14 +116,14 @@ class Resquest(BaseHTTPRequestHandler):
 	def do_POST(self):
 		path_len = len(self.path)
 		if path_len == 31 and self.path[:13] == "/upload?uuid=":			#上传图片
-			cli_uuid = urllib.request.unquote(self.path[13:])
+			cli_uuid = unquote(self.path[13:])
 			if len(cli_uuid) == 2:
 				if os.path.exists(user_dir + cli_uuid):
 					self.save_img(self.rfile.read(int(self.headers.get('content-length'))))
 				else: self.send_200(byte_null, "text/plain")
 			else: self.send_200(byte_erro, "text/plain")
 		elif path_len == 31 and self.path[:13] == "/upform?uuid=":		#表单上传图片
-			cli_uuid = urllib.request.unquote(self.path[13:])
+			cli_uuid = unquote(self.path[13:])
 			if len(cli_uuid) == 2:
 				if os.path.exists(user_dir + cli_uuid):
 					size = int(self.headers.get('content-length'))
@@ -153,9 +159,9 @@ class Resquest(BaseHTTPRequestHandler):
 	
 	def save_img(self, datas):
 		is_converted = False
-		with Image.open(io.BytesIO(datas)) as img2save:
+		with Image.open(BytesIO(datas)) as img2save:
 			if img2save.format != "WEBP":		#转换webp
-				converted = io.BytesIO()
+				converted = BytesIO()
 				img2save.save(converted, "WEBP")
 				converted.seek(0)
 				is_converted = True
@@ -173,7 +179,7 @@ class Resquest(BaseHTTPRequestHandler):
 			fn = os.path.join(image_dir, fname + ".webp")	#生成文件存储路径
 			if not os.path.exists(fn):
 				if is_converted: converted.seek(0)
-				with open(fn, 'wb') as f: shutil.copyfileobj(converted, f) if is_converted else f.write(datas)
+				with open(fn, 'wb') as f: copyfileobj(converted, f) if is_converted else f.write(datas)
 				if is_converted: converted.close()
 				self.send_200(byte_succ, "text/plain")
 			else: self.send_200(byte_erro, "text/plain")
@@ -207,8 +213,8 @@ if __name__ == '__main__':
 			if image_dir[-1] != '/': image_dir += '/'
 			print("Starting ICQS at: %s:%s" % host, "storage dir:", user_dir, "image dir:", image_dir)
 			# Create ONE socket.
-			sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-			sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+			sock = socket(AF_INET, SOCK_STREAM)
+			sock.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
 			sock.bind(host)
 			sock.listen(5)
 			if len(sys.argv) == 5: os.setuid(server_uid)		#监听后降权
