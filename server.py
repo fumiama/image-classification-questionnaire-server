@@ -8,7 +8,7 @@ from socket import socket, AF_INET, SOCK_STREAM, SOL_SOCKET, SO_REUSEADDR
 from urllib.request import quote, unquote
 from time import time
 from hashlib import md5
-from signal import signal, SIGPIPE, SIG_DFL
+from signal import signal, SIGPIPE, SIG_DFL, SIGCHLD, SIG_IGN
 from PIL import Image
 import base14, sys, os, img_diff, form_fsm
 
@@ -207,12 +207,35 @@ if __name__ == '__main__':
 			sock.bind(host)
 			sock.listen(5)
 			if len(sys.argv) == 5: os.setuid(server_uid)		#监听后降权
-			[Thread(i) for i in range(100)]
-			#主进程也开启一个服务
-			signal(SIGPIPE, SIG_DFL)		# 忽略管道错误
-			httpd = HTTPServer(host, Resquest, False)
-			httpd.socket = sock
-			httpd.server_bind = lambda self: None
-			httpd.serve_forever()
+			if os.fork() == 0:		#创建daemon
+				os.setsid()
+				#创建孙子进程，而后子进程退出
+				if os.fork() > 0:
+   		 			sys.exit(0)
+				#重定向标准输入流、标准输出流、标准错误
+				sys.stdout.flush()
+				sys.stderr.flush()
+				si = open("/dev/null", 'r')
+				so = open("/dev/null", 'a+')
+				se = open("/dev/null", 'a+')
+				os.dup2(si.fileno(), sys.stdin.fileno())
+				os.dup2(so.fileno(), sys.stdout.fileno())
+				os.dup2(se.fileno(), sys.stderr.fileno())
+				signal(SIGCHLD, SIG_IGN)
+				pid = os.fork()
+				while pid:			#监控服务是否退出
+					os.wait()
+					print("Subprocess exited, restarting...")
+					pid = os.fork()
+				if pid < 0:
+					print("Fork error!")
+				else:
+					[Thread(i) for i in range(100)]
+					#主进程也开启一个服务
+					signal(SIGPIPE, SIG_DFL)		# 忽略管道错误
+					httpd = HTTPServer(host, Resquest, False)
+					httpd.socket = sock
+					httpd.server_bind = lambda self: None
+					httpd.serve_forever()
 		else: print("Error: image dir", image_dir, "is not exist.")
 	else: print("Usage:", sys.argv[0], "<user_dir> <image_dir> <pwd_path> (server_uid)")
