@@ -14,13 +14,13 @@ def init_dll(dll_pth):
     dll.encode.restype = POINTER(LENDAT)
     dll.decode.restype = POINTER(LENDAT)
 
-def machine():
+def this_machine():
     """Return type ofmachine."""
     if name == 'nt' and sys.version_info[:2] < (2,7):
         return environ.get("PROCESSOR_ARCHITEW6432", environ.get('PROCESSOR_ARCHITECTURE',''))
     else: return machine()
 
-def os_bits(machine=machine()):
+def os_bits(machine=this_machine()):
     """Return bitness ofoperating system, or None if unknown."""
     machine2bits = {'AMD64':64, 'x86_64': 64, 'i386': 32, 'x86': 32}
     return machine2bits.get(machine, None)
