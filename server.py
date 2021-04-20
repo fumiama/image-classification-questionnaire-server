@@ -29,6 +29,29 @@ class Resquest(BaseHTTPRequestHandler):
 		self.end_headers()
 		self.wfile.write(data)
 
+	def do_pick(self, user_uuid: str, send_name_only: bool):
+		if len(user_uuid) == 2:		#base14检测
+			user_path = user_dir + user_uuid +'/'
+			#print("User dir:", user_path)
+			if os.path.exists(user_path):
+				voted_imgs_list = os.listdir(user_path)
+				all_imgs_list = [name[:-5] for name in os.listdir(image_dir)]
+				all_imgs_len = len(all_imgs_list)
+				if len(voted_imgs_list) < all_imgs_len:
+					pick_img_name = all_imgs_list[randint(0, all_imgs_len-1)]
+					while pick_img_name in voted_imgs_list:
+						pick_img_name = all_imgs_list[randint(0, all_imgs_len-1)]
+					if send_name_only: self.send_200(quote(pick_img_name).encode(), "text/plain")
+					else:
+						img_path = image_dir + pick_img_name + ".webp"
+						try:
+							with open(img_path, "rb") as f:
+								self.send_200(f.read(), "image/webp")
+						except: self.send_200(byte_erro, "text/plain")
+				else: self.send_200(byte_null, "text/plain")
+			else: self.send_200(byte_erro, "text/plain")
+		else: self.send_200(byte_erro, "text/plain")
+
 	def do_GET(self):
 		get_path = self.path[1:]
 		get_path_len = len(get_path)
@@ -45,43 +68,9 @@ class Resquest(BaseHTTPRequestHandler):
 			with open("./index.html", "rb") as f:
 				self.send_200(f.read(), "text/html")
 		elif get_path_len == 25 and get_path[:6] == "pickdl":
-			user_uuid = unquote(get_path[7:])
-			if len(user_uuid) == 2:		#base14检测
-				user_path = user_dir + user_uuid +'/'
-				#print("User dir:", user_path)
-				if os.path.exists(user_path):
-					voted_imgs_list = os.listdir(user_path)
-					all_imgs_list = [name[:-5] for name in os.listdir(image_dir)]
-					all_imgs_len = len(all_imgs_list)
-					if len(voted_imgs_list) < all_imgs_len:
-						pick_img_name = all_imgs_list[randint(0, all_imgs_len-1)]
-						while pick_img_name in voted_imgs_list:
-							pick_img_name = all_imgs_list[randint(0, all_imgs_len-1)]
-						img_path = image_dir + pick_img_name + ".webp"
-						try:
-							with open(img_path, "rb") as f:
-								self.send_200(f.read(), "image/webp")
-						except: self.send_200(byte_erro, "text/plain")
-					else: self.send_200(byte_null, "text/plain")
-				else: self.send_200(byte_erro, "text/plain")
-			else: self.send_200(byte_erro, "text/plain")
+			self.do_pick(unquote(get_path[7:]), False)
 		elif get_path_len == 23 and get_path[:4] == "pick":
-			user_uuid = unquote(get_path[5:])
-			if len(user_uuid) == 2:		#base14检测
-				user_path = user_dir + user_uuid +'/'
-				#print("User dir:", user_path)
-				if os.path.exists(user_path):
-					voted_imgs_list = os.listdir(user_path)
-					all_imgs_list = [name[:-5] for name in os.listdir(image_dir)]
-					all_imgs_len = len(all_imgs_list)
-					if len(voted_imgs_list) < all_imgs_len:
-						pick_img_name = all_imgs_list[randint(0, all_imgs_len-1)]
-						while pick_img_name in voted_imgs_list:
-							pick_img_name = all_imgs_list[randint(0, all_imgs_len-1)]
-						self.send_200(quote(pick_img_name).encode(), "text/plain")
-					else: self.send_200(byte_null, "text/plain")
-				else: self.send_200(byte_erro, "text/plain")
-			else: self.send_200(byte_erro, "text/plain")
+			self.do_pick(unquote(get_path[5:]), True)
 		elif get_path_len >= 72:		# 投票
 			if get_path_len > 4 and get_path[:4] == "vote":
 				try:
@@ -142,7 +131,7 @@ class Resquest(BaseHTTPRequestHandler):
 			else: self.send_200(byte_erro, "text/plain")
 		else: self.send_200(byte_null, "text/plain")
 
-	def do_form_post(self, size, skip):
+	def do_form_post(self, size: int, skip: int):
 		skip += 9
 		file_type = self.rfile.read(9).decode()
 		print("post form type:", file_type)
@@ -157,7 +146,7 @@ class Resquest(BaseHTTPRequestHandler):
 			self.save_img(datas)
 		else: self.send_200(byte_erro, "text/plain")
 	
-	def save_img(self, datas):
+	def save_img(self, datas: bytes):
 		is_converted = False
 		with Image.open(BytesIO(datas)) as img2save:
 			if img2save.format != "WEBP":		#转换webp
@@ -187,7 +176,7 @@ class Resquest(BaseHTTPRequestHandler):
 
 # Launch 100 listener threads.
 class Thread(threading.Thread):
-	def __init__(self, i):
+	def __init__(self, i: int):
 		threading.Thread.__init__(self)
 		self.i = i
 		signal(SIGPIPE, SIG_DFL)		# 忽略管道错误
