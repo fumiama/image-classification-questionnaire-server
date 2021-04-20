@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from ctypes import CDLL, c_void_p, c_char_p, c_uint64, c_uint32, POINTER, Structure, string_at
-import platform, os
+from platform import machine
+from os import name, environ
 
 #dllpath = './build/libbase14.so'
 #dll = CDLL(dllpath)
@@ -15,11 +16,9 @@ def init_dll(dll_pth):
 
 def machine():
     """Return type ofmachine."""
-    if os.name == 'nt' and sys.version_info[:2] < (2,7):
-        returnos.environ.get("PROCESSOR_ARCHITEW6432",
-                os.environ.get('PROCESSOR_ARCHITECTURE',''))
-    else:
-        return platform.machine()
+    if name == 'nt' and sys.version_info[:2] < (2,7):
+        return environ.get("PROCESSOR_ARCHITEW6432", environ.get('PROCESSOR_ARCHITECTURE',''))
+    else: return machine()
 
 def os_bits(machine=machine()):
     """Return bitness ofoperating system, or None if unknown."""

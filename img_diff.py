@@ -1,5 +1,8 @@
 from PIL import Image
-import imagehash, base14, binascii, io
+from imagehash import dhash
+from binascii import a2b_hex
+from io import BytesIO
+import base14
 from numba import jit
 
 last_char = '㴁'
@@ -8,15 +11,15 @@ last_char = '㴁'
 
 def get_dhash_b14(datas):
     b14_dhash = "0" * 16
-    with io.BytesIO(datas) as dataio:
+    with BytesIO(datas) as dataio:
         with Image.open(dataio) as img:
-            b14_dhash = base14.get_base14(binascii.a2b_hex(str(imagehash.dhash(img))))[:-1]
+            b14_dhash = base14.get_base14(a2b_hex(str(dhash(img))))[:-1]
     return b14_dhash
 
 def get_dhash_b14_io(dataio):
     b14_dhash = "0" * 16
     with Image.open(dataio) as img:
-        b14_dhash = base14.get_base14(binascii.a2b_hex(str(imagehash.dhash(img))))[:-1]
+        b14_dhash = base14.get_base14(a2b_hex(str(dhash(img))))[:-1]
     return b14_dhash
 
 def decode_dhash(img_name_no_ext_b14):
