@@ -45,28 +45,28 @@ make
 
 ### 0. 直接访问
 
-格式: http://[server_domain]/index.html
+- 格式: http://[server_domain]/index.html
 
-说明: 直接通过简易网页访问服务。
+- 说明: 直接通过简易网页访问服务。
 
 ### 1. 注册用户
 
-格式: http://[server_domain]/signup?1234567890
+- 格式: http://[server_domain]/signup?1234567890
 
-返回: 成功(succ)，密码错误(null)，处理错误(erro)
+- 返回: 成功(succ)，密码错误(null)，处理错误(erro)
 
-说明:
+- 说明:
 
 1. 返回`utf-8`编码的两个汉字，代表下面用到的`uuid`
 2. 后跟10位整数，表示密码与当前秒数异或的结果，与服务端相差10秒内有效
 
 ### 2. 指定分类(投票)
 
-格式: http://[server_domain]/vote?uuid=用户&img=投票的图片&class=n
+- 格式: http://[server_domain]/vote?uuid=用户&img=投票的图片&class=n
 
-返回: 成功(succ)，错误(erro)
+- 返回: 成功(succ)，错误(erro)
 
-说明:
+- 说明:
 
 1. `uuid`字段容纳两(数量不可增减)个`utf-8`编码的汉字，表示投票用户。
 2. `img`字段容纳五个(数量不可增减)`utf-8`编码的汉字，唯一标识了这张图片。
@@ -74,19 +74,19 @@ make
 
 ### 3. 下载图片
 
-格式: http://[server_domain]/目标的图片
+- 格式: http://[server_domain]/目标的图片
 
-返回: 成功(图片数据)，空(null)，错误(erro)
+- 返回: 成功(图片数据)，空(null)，错误(erro)
 
-说明: `目标的图片`是五个(数量不可增减)`utf-8`编码的汉字，唯一标识了这张图片。
+- 说明: `目标的图片`是五个(数量不可增减)`utf-8`编码的汉字，唯一标识了这张图片。
 
 ### 4. 上传图片
 
-格式: `HTTP POST`到http://[server_domain]/upload?uuid=用户
+- 格式: `HTTP POST`到http://[server_domain]/upload?uuid=用户
 
-返回: 成功(succ)，错误(erro)，图片相似/无此用户(null)
+- 返回: 成功(succ)，错误(erro)，图片相似/无此用户(null)
 
-说明: 必须为`webp`、`jpg`或`png`格式。使用`wget`时，可使用如下命令。
+- 说明: 必须为`webp`、`jpg`或`png`格式。使用`wget`时，可使用如下命令。
 
 ```bash
 wget --post-file=image.webp http://[server_domain]/upload?uuid=用户
@@ -94,24 +94,24 @@ wget --post-file=image.webp http://[server_domain]/upload?uuid=用户
 
 ### 5. 从未投票图片中随机选择图片并返回图片数据
 
-格式: http://[server_domain]/pickdl?用户
+- 格式: http://[server_domain]/pickdl?用户
 
-返回: 成功(图片数据)，空(null)，错误(erro)
+- 返回: 成功(图片数据)，空(null)，错误(erro)
 
-说明: `用户`是两个(数量不可增减)`utf-8`编码的汉字，唯一标识了某个用户。
+- 说明: `用户`是两个(数量不可增减)`utf-8`编码的汉字，唯一标识了某个用户。
 
 ### 6. 从未投票图片中随机选择图片并返回图片名
 
-格式: http://[server_domain]/pick?用户
+- 格式: http://[server_domain]/pick?用户
 
-返回: 成功(图片名)，空(null)，错误(erro)
+- 返回: 成功(图片名)，空(null)，错误(erro)
 
-说明:
+- 说明:
 1. `用户`是两个(数量不可增减)`utf-8`编码的汉字，唯一标识了某个用户。
 2. 返回的图片名经过了转义。
 
 # 小工具
 
-一些实用的小工具放在了`tools`文件夹，包括批量上传图片，批量转换图片到`webp`，批量重命名文件。
+一些实用的小工具放在了`tools`文件夹，包括批量上传图片，批量转换图片到`webp`，批量重命名文件，批量缩小`webp`大小。
 
 使用方法详见注释。
