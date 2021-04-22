@@ -6,7 +6,7 @@ from shutil import copyfileobj
 import threading
 from socket import socket, AF_INET, SOCK_STREAM, SOL_SOCKET, SO_REUSEADDR
 from urllib.request import quote, unquote
-from time import time
+from time import time, sleep
 from hashlib import md5
 from signal import signal, SIGPIPE, SIG_DFL, SIGCHLD, SIG_IGN
 from PIL import Image
@@ -194,12 +194,13 @@ class Thread(threading.Thread):
 
 def handle_client():
 	thread_pool = [Thread(i) for i in range(8)]
-	#主进程也开启一个服务
-	signal(SIGPIPE, SIG_DFL)		# 忽略管道错误
-	httpd = HTTPServer(host, Resquest, False)
-	httpd.socket = sock
-	httpd.server_bind = lambda self: None
-	httpd.serve_forever()
+	i = 8
+	while True:		#监控线程退出情况
+		for t in thread_pool:
+			if not t.is_alive():
+				t = Thread(i)
+				i += 1
+		sleep(1)
 
 if __name__ == '__main__':
 	if len(sys.argv) == 4 or len(sys.argv) == 5 or len(sys.argv) == 6:
