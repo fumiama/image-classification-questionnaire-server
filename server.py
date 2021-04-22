@@ -244,7 +244,7 @@ if __name__ == '__main__':
 				os.dup2(se.fileno(), sys.stderr.fileno())
 				signal(SIGCHLD, SIG_IGN)
 				pid = os.fork()
-				while pid:			#监控服务是否退出
+				while pid > 0:			#监控服务是否退出
 					os.wait()
 					print("Subprocess exited, restarting...")
 					pid = os.fork()
