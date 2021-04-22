@@ -29,12 +29,12 @@ make
 `server.py`的语法如下
 
 ```bash
-./server.py <user_dir> <image_dir> <pwd_path> (server_uid)
+./server.py [-d] <user_dir> <image_dir> <pwd_path> (server_uid)
 ```
 
-其中`server_uid`为可选项。如果设置，程序将会在绑定端口后切换到该`uid`处理请求。
-
-在执行上述语句后，服务端就已经开始了后台运行。
+其中：
+1. `-d`为可选项，如果设置，程序将会以`daemon`运行。
+2. `server_uid`为可选项。如果设置，程序将会在绑定端口后切换到该`uid`处理请求。
 
 注意:
 

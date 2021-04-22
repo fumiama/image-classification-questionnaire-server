@@ -181,6 +181,7 @@ class Thread(threading.Thread):
 		self.i = i
 		signal(SIGPIPE, SIG_DFL)		# 忽略管道错误
 		self.daemon = True
+		print("Thread", i, "start.")
 		self.start()
 	def run(self):
 		self.httpd = HTTPServer(host, Resquest, False)
@@ -190,13 +191,33 @@ class Thread(threading.Thread):
 		self.httpd.server_bind = self.server_close = lambda self: None
 		self.httpd.serve_forever()
 
+def handle_client():
+	thread_pool = [Thread(i) for i in range(8)]
+	#主进程也开启一个服务
+	signal(SIGPIPE, SIG_DFL)		# 忽略管道错误
+	httpd = HTTPServer(host, Resquest, False)
+	httpd.socket = sock
+	httpd.server_bind = lambda self: None
+	httpd.serve_forever()
+
 if __name__ == '__main__':
-	if len(sys.argv) == 4 or len(sys.argv) == 5:
-		user_dir = sys.argv[1]
-		image_dir = sys.argv[2]
-		with open(sys.argv[3], "rb") as f:
+	if len(sys.argv) == 4 or len(sys.argv) == 5 or len(sys.argv) == 6:
+		if sys.argv[1] == "-d":
+			run_daemon = True
+			user_dir = sys.argv[2]
+			image_dir = sys.argv[3]
+			pwd_file = sys.argv[4]
+			if len(sys.argv) == 6: server_uid = int(sys.argv[5])
+			else: server_uid = -1
+		else:
+			run_daemon = False
+			user_dir = sys.argv[1]
+			image_dir = sys.argv[2]
+			pwd_file = sys.argv[3]
+			if len(sys.argv) == 5: server_uid = int(sys.argv[4])
+			else: server_uid = -1
+		with open(pwd_file, "rb") as f:
 			pwd = int.from_bytes(f.read()[2:], byteorder="big")		#两个汉字，四个字节
-		if len(sys.argv) == 5: server_uid = int(sys.argv[4])
 		if user_dir[-1] != '/': user_dir += '/'
 		if os.path.exists(image_dir):
 			if image_dir[-1] != '/': image_dir += '/'
@@ -206,8 +227,8 @@ if __name__ == '__main__':
 			sock.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
 			sock.bind(host)
 			sock.listen(5)
-			if len(sys.argv) == 5: os.setuid(server_uid)		#监听后降权
-			if os.fork() == 0:		#创建daemon
+			if server_uid > 0: os.setuid(server_uid)		#监听后降权
+			if run_daemon and os.fork() == 0:		#创建daemon
 				os.setsid()
 				#创建孙子进程，而后子进程退出
 				if os.fork() > 0: sys.exit(0)
@@ -228,13 +249,8 @@ if __name__ == '__main__':
 					pid = os.fork()
 				if pid < 0:
 					print("Fork error!")
-				else:
-					[Thread(i) for i in range(100)]
-					#主进程也开启一个服务
-					signal(SIGPIPE, SIG_DFL)		# 忽略管道错误
-					httpd = HTTPServer(host, Resquest, False)
-					httpd.socket = sock
-					httpd.server_bind = lambda self: None
-					httpd.serve_forever()
+				else: handle_client()
+			elif not run_daemon: handle_client()
+			else: print("Creating daemon...")
 		else: print("Error: image dir", image_dir, "is not exist.")
 	else: print("Usage:", sys.argv[0], "<user_dir> <image_dir> <pwd_path> (server_uid)")
