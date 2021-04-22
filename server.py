@@ -243,9 +243,10 @@ if __name__ == '__main__':
 				os.dup2(si.fileno(), sys.stdin.fileno())
 				os.dup2(so.fileno(), sys.stdout.fileno())
 				os.dup2(se.fileno(), sys.stderr.fileno())
-				signal(SIGCHLD, SIG_IGN)
 				pid = os.fork()
 				while pid > 0:			#监控服务是否退出
+					signal(SIGCHLD, SIG_IGN)
+					signal(SIGPIPE, SIG_IGN)		# 忽略管道错误
 					os.wait()
 					print("Subprocess exited, restarting...")
 					pid = os.fork()
