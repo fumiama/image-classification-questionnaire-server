@@ -58,7 +58,8 @@ class Resquest(BaseHTTPRequestHandler):
 		#print("get_path_len:", get_path_len)
 		if get_path_len == 17 and get_path[:6] == "signup":	# 注册
 			try:
-				if abs(int(time()) - (int(get_path[7:]) ^ pwd)) <= 10:		#验证通过
+				diff = int(time()) - (int(get_path[7:]) ^ pwd)
+				if diff < 10 and diff >= 0:		#验证通过
 					new_uuid = get_uuid()
 					os.makedirs(user_dir + new_uuid)
 					self.send_200(new_uuid.encode("utf-8"), "application/octet-stream")
