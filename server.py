@@ -71,7 +71,7 @@ class Resquest(BaseHTTPRequestHandler):
 			self.do_pick(unquote(get_path[7:]), False)
 		elif get_path_len == 23 and get_path[:4] == "pick":
 			self.do_pick(unquote(get_path[5:]), True)
-		elif get_path_len >= 72:		# 投票
+		elif get_path_len >= 72 and get_path_len < 256:		# 投票
 			if get_path_len > 4 and get_path[:4] == "vote":
 				try:
 					cli_req = get_path[5:]
@@ -160,7 +160,7 @@ class Resquest(BaseHTTPRequestHandler):
 		this_hash = img_diff.decode_dhash(fname)
 		hash_len = len(this_hash)
 		for img_name in all_imgs_list:
-			if img_diff.hamm_img(this_hash, img_diff.decode_dhash(img_name), hash_len) <= 12:
+			if img_diff.hamm_img(this_hash, img_diff.decode_dhash(img_name), hash_len) <= 6:
 				no_similar = False
 				break
 		if no_similar:
