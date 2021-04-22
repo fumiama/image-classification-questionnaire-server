@@ -8,7 +8,7 @@ from socket import socket, AF_INET, SOCK_STREAM, SOL_SOCKET, SO_REUSEADDR
 from urllib.request import quote, unquote
 from time import time, sleep
 from hashlib import md5
-from signal import signal, SIGPIPE, SIG_DFL, SIGCHLD, SIG_IGN
+from signal import signal, SIGPIPE, SIGCHLD, SIG_IGN
 from PIL import Image
 import base14, sys, os, img_diff, form_fsm
 
@@ -180,7 +180,7 @@ class Thread(threading.Thread):
 	def __init__(self, i: int):
 		threading.Thread.__init__(self)
 		self.i = i
-		signal(SIGPIPE, SIG_DFL)		# 忽略管道错误
+		signal(SIGPIPE, SIG_IGN)		# 忽略管道错误
 		self.daemon = True
 		print("Thread", i, "start.")
 		self.start()
