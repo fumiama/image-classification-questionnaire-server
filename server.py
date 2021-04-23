@@ -107,11 +107,16 @@ class Resquest(BaseHTTPRequestHandler):
 		path_len = len(self.path)
 		if path_len == 31 and self.path[:13] == "/upload?uuid=":			#上传图片
 			cli_uuid = unquote(self.path[13:])
+			print("post from:", cli_uuid)
 			if len(cli_uuid) == 2:
 				if os.path.exists(user_dir + cli_uuid):
 					self.save_img(self.rfile.read(int(self.headers.get('content-length'))))
-				else: self.send_200(byte_null, "text/plain")
-			else: self.send_200(byte_erro, "text/plain")
+				else:
+					self.rfile.read(int(self.headers.get('content-length')))
+					self.send_200(byte_null, "text/plain")
+			else:
+				self.rfile.read(int(self.headers.get('content-length')))
+				self.send_200(byte_erro, "text/plain")
 		elif path_len == 31 and self.path[:13] == "/upform?uuid=":		#表单上传图片
 			cli_uuid = unquote(self.path[13:])
 			if len(cli_uuid) == 2:
@@ -128,9 +133,15 @@ class Resquest(BaseHTTPRequestHandler):
 								self.rfile.read(3)
 								self.do_form_post(size, skip)
 								break
-				else: self.send_200(byte_null, "text/plain")
-			else: self.send_200(byte_erro, "text/plain")
-		else: self.send_200(byte_null, "text/plain")
+				else:
+					self.rfile.read(int(self.headers.get('content-length')))
+					self.send_200(byte_null, "text/plain")
+			else:
+				self.rfile.read(int(self.headers.get('content-length')))
+				self.send_200(byte_erro, "text/plain")
+		else:
+			self.rfile.read(int(self.headers.get('content-length')))
+			self.send_200(byte_null, "text/plain")
 
 	def do_form_post(self, size: int, skip: int):
 		skip += 9
@@ -173,7 +184,7 @@ class Resquest(BaseHTTPRequestHandler):
 				if is_converted: converted.close()
 				self.send_200(byte_succ, "text/plain")
 			else: self.send_200(byte_erro, "text/plain")
-		else:  self.send_200(byte_null, "text/plain")
+		else: self.send_200(byte_null, "text/plain")
 
 # Launch 100 listener threads.
 class Thread(threading.Thread):
