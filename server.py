@@ -23,7 +23,7 @@ def get_uuid():
 	return base14.get_base14(md5(str(time()).encode()).digest())[:2]
 
 class Resquest(BaseHTTPRequestHandler):
-	def send_200(self, data, content_type):
+	def send_200(self, data: bytes, content_type: str):
 		self.send_response(200)
 		self.send_header('Content-type', content_type)
 		self.end_headers()
@@ -196,9 +196,10 @@ def handle_client():
 	thread_pool = [Thread(i) for i in range(8)]
 	i = 8
 	while True:		#监控线程退出情况
-		for t in thread_pool:
+		for i in range(len(thread_pool)):
+			t = thread_pool[i]
 			if not t.is_alive():
-				t = Thread(i)
+				thread_pool[i] = Thread(i)
 				i += 1
 		sleep(1)
 
