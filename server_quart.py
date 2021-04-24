@@ -193,7 +193,7 @@ async def upform():
 		else: return {"stat":"noid"}
 	else: return {"stat":"invid"}
 
-@app.before_serving
+@app.before_first_request
 async def setuid():
 	if server_uid > 0: os.setuid(server_uid)		#监听后降权
 
