@@ -19,7 +19,7 @@ cmake ..
 make
 ```
 
-你还需要安装`pillow`，`numba`，`imagehash`以确保程序运行。
+你还需要安装`pillow`，`numba`，`imagehash`，`quart`以确保程序运行。
 
 # 开始使用
 
