@@ -22,12 +22,17 @@ base14.init_dll('./build/libbase14.so')
 def get_uuid():
 	return base14.get_base14(md5(str(time()).encode()).digest())[:2]
 
+def flush_io():
+	sys.stdout.flush()
+	sys.stderr.flush()
+
 class Resquest(BaseHTTPRequestHandler):
 	def send_200(self, data: bytes, content_type: str):
 		self.send_response(200)
 		self.send_header('Content-type', content_type)
 		self.end_headers()
 		self.wfile.write(data)
+		flush_io()
 
 	def do_pick(self, user_uuid: str, send_name_only: bool):
 		if len(user_uuid) == 2:		#base14检测
@@ -247,8 +252,7 @@ if __name__ == '__main__':
 				#创建孙子进程，而后子进程退出
 				if os.fork() > 0: sys.exit(0)
 				#重定向标准输入流、标准输出流、标准错误
-				sys.stdout.flush()
-				sys.stderr.flush()
+				flush_io()
 				si = open("/dev/null", 'r')
 				so = open("./log.txt", 'a+')
 				se = open("./log_err.txt", 'a+')
