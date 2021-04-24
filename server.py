@@ -186,11 +186,11 @@ class Resquest(BaseHTTPRequestHandler):
 			else: self.send_200(byte_erro, "text/plain")
 		else: self.send_200(byte_null, "text/plain")
 
-# Launch 100 listener threads.
+# Launch listener threads.
 class Thread(threading.Thread):
 	def __init__(self, i: int):
 		self.i = i
-		signal(SIGPIPE, SIG_IGN)		# 忽略管道错误
+		#signal(SIGPIPE, SIG_IGN)		# 忽略管道错误
 		threading.Thread.__init__(self)
 		print("Thread", i, "start.")
 		self.start()
@@ -250,8 +250,8 @@ if __name__ == '__main__':
 				sys.stdout.flush()
 				sys.stderr.flush()
 				si = open("/dev/null", 'r')
-				so = open("/dev/null", 'a+')
-				se = open("/dev/null", 'a+')
+				so = open("./log.txt", 'a+')
+				se = open("./log_err.txt", 'a+')
 				os.dup2(si.fileno(), sys.stdin.fileno())
 				os.dup2(so.fileno(), sys.stdout.fileno())
 				os.dup2(se.fileno(), sys.stderr.fileno())

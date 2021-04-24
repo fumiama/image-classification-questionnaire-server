@@ -133,3 +133,5 @@ post_all.sh
 .DS_Store
 pwd.txt
 /datas
+log.txt
+log_err.txt
