@@ -8,13 +8,13 @@ from os import name, environ
 
 global dll
 
-def init_dll(dll_pth: str):
+def init_dll(dll_pth: str) -> None:
     global dll
     dll = CDLL(dll_pth)
     dll.encode.restype = POINTER(LENDAT)
     dll.decode.restype = POINTER(LENDAT)
 
-def this_machine():
+def this_machine() -> str:
     """Return type ofmachine."""
     if name == 'nt' and sys.version_info[:2] < (2,7):
         return environ.get("PROCESSOR_ARCHITEW6432", environ.get('PROCESSOR_ARCHITECTURE',''))
@@ -29,7 +29,7 @@ class LENDAT(Structure):
     _fields_=[('data', c_void_p),
              ('len', c_uint64 if os_bits() == 64 else c_uint32)]
 
-def get_base14(byte_str: bytes):
+def get_base14(byte_str: bytes) -> str:
     global dll
     byte_len = len(byte_str)
     #print("data length:", byte_len)
@@ -40,7 +40,7 @@ def get_base14(byte_str: bytes):
     #print(encd.decode("utf-16-be"))
     return encd.decode("utf-16-be")
 
-def from_base14(utf16be_byte_str: bytes):
+def from_base14(utf16be_byte_str: bytes) -> bytes:
     global dll
     byte_len = len(utf16be_byte_str)
     t = dll.decode(utf16be_byte_str, byte_len)

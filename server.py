@@ -19,22 +19,22 @@ byte_null = "null".encode()
 
 base14.init_dll('./build/libbase14.so')
 
-def get_uuid():
+def get_uuid() -> str:
 	return base14.get_base14(md5(str(time()).encode()).digest())[:2]
 
-def flush_io():
+def flush_io() -> None:
 	sys.stdout.flush()
 	sys.stderr.flush()
 
 class Resquest(BaseHTTPRequestHandler):
-	def send_200(self, data: bytes, content_type: str):
+	def send_200(self, data: bytes, content_type: str) -> None:
 		self.send_response(200)
 		self.send_header('Content-type', content_type)
 		self.end_headers()
 		self.wfile.write(data)
 		flush_io()
 
-	def do_pick(self, user_uuid: str, send_name_only: bool):
+	def do_pick(self, user_uuid: str, send_name_only: bool) -> None:
 		if len(user_uuid) == 2:		#base14检测
 			user_path = user_dir + user_uuid +'/'
 			#print("User dir:", user_path)
@@ -57,7 +57,7 @@ class Resquest(BaseHTTPRequestHandler):
 			else: self.send_200(byte_erro, "text/plain")
 		else: self.send_200(byte_erro, "text/plain")
 
-	def do_GET(self):
+	def do_GET(self) -> None:
 		get_path = self.path[1:]
 		get_path_len = len(get_path)
 		#print("get_path_len:", get_path_len)
@@ -108,7 +108,7 @@ class Resquest(BaseHTTPRequestHandler):
 			else: self.send_200(byte_erro, "text/plain")
 		else: self.send_200(byte_null, "text/plain")
 	
-	def do_POST(self):
+	def do_POST(self) -> None:
 		path_len = len(self.path)
 		if path_len == 31 and self.path[:13] == "/upload?uuid=":			#上传图片
 			cli_uuid = unquote(self.path[13:])
@@ -148,7 +148,7 @@ class Resquest(BaseHTTPRequestHandler):
 			self.rfile.read(int(self.headers.get('content-length')))
 			self.send_200(byte_null, "text/plain")
 
-	def do_form_post(self, size: int, skip: int):
+	def do_form_post(self, size: int, skip: int) -> None:
 		skip += 9
 		file_type = self.rfile.read(9).decode()
 		print("post form type:", file_type)
@@ -163,7 +163,7 @@ class Resquest(BaseHTTPRequestHandler):
 			self.save_img(datas)
 		else: self.send_200(byte_erro, "text/plain")
 	
-	def save_img(self, datas: bytes):
+	def save_img(self, datas: bytes) -> None:
 		is_converted = False
 		with Image.open(BytesIO(datas)) as img2save:
 			if img2save.format != "WEBP":		#转换webp
@@ -193,13 +193,13 @@ class Resquest(BaseHTTPRequestHandler):
 
 # Launch listener threads.
 class Thread(threading.Thread):
-	def __init__(self, i: int):
+	def __init__(self, i: int) -> None:
 		self.i = i
 		#signal(SIGPIPE, SIG_IGN)		# 忽略管道错误
 		threading.Thread.__init__(self)
 		print("Thread", i, "start.")
 		self.start()
-	def run(self):
+	def run(self) -> None:
 		self.httpd = HTTPServer(host, Resquest, False)
 		# Prevent the HTTP server from re-binding every handler.
 		# https://stackoverflow.com/questions/46210672/
@@ -207,7 +207,7 @@ class Thread(threading.Thread):
 		self.httpd.server_bind = self.server_close = lambda self: None
 		self.httpd.serve_forever()
 
-def handle_client():
+def handle_client() -> None:
 	thread_pool = [Thread(i) for i in range(8)]
 	i = 8
 	while True:		#监控线程退出情况

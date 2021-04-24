@@ -1,7 +1,7 @@
 from numba import jit, uint8
 
 @jit(uint8(uint8, uint8))
-def scan(state: int, next_char: int):
+def scan(state: int, next_char: int) -> int:
 	if state == 0 and next_char == 67: state = 1
 	elif state == 1 and next_char == 111: state = 2
 	elif state == 2 and next_char == 110: state = 3
