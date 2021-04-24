@@ -1,22 +1,15 @@
 #!/usr/bin/env python3
 from quart import Quart, request, Response
-from http.server import HTTPServer, BaseHTTPRequestHandler
 from random import randint
 from io import BytesIO
 from shutil import copyfileobj
-import threading
-from socket import socket, AF_INET, SOCK_STREAM, SOL_SOCKET, SO_REUSEADDR
 from urllib.request import quote, unquote
 from time import time, sleep
 from hashlib import md5
-from signal import signal, SIGPIPE, SIGCHLD, SIG_IGN
 from PIL import Image
 import base14, sys, os, img_diff, form_fsm, json
 
 host = ('0.0.0.0', 80)
-byte_succ = "succ".encode()
-byte_erro = "erro".encode()
-byte_null = "null".encode()
 app = Quart(__name__)
 
 base14.init_dll('./build/libbase14.so')
@@ -226,7 +219,6 @@ if __name__ == '__main__':
 			if image_dir[-1] != '/': image_dir += '/'
 			info_json_path = image_dir + "info.json"
 			print("Starting ICQS at: %s:%s" % host, "storage dir:", user_dir, "image dir:", image_dir)
-			if server_uid > 0: os.setuid(server_uid)		#监听后降权
 			if run_daemon and os.fork() == 0:		#创建daemon
 				os.setsid()
 				#创建孙子进程，而后子进程退出
