@@ -26,7 +26,7 @@ make
 1. 如果你是`ubuntu`用户，由于该系统绑定端口需要`root`权限，因此需要添加可选参数`server_uid`以在绑定端口后降权运行。
 2. 密码文件`pwd_path`必须为以`UTF16BE`编码存储的两个汉字（包括文件头`0xfeff`），总长`6`字节。
 
-简易版`server.py`的语法如下
+- 简易版`server.py`的语法如下（使用一段时间后可能会无响应，目前尚未解决）
 
 ```bash
 ./server.py [-d] <user_dir> <image_dir> <pwd_path> (server_uid)
@@ -36,7 +36,7 @@ make
 1. `-d`为可选项，如果设置，程序将会以`daemon`运行。
 2. `server_uid`为可选项。如果设置，程序将会在绑定端口后切换到该`uid`处理请求。
 
-`Quart`版`server_quart.py`的语法如下
+- `Quart`版`server_quart.py`的语法如下（高并发）
 
 ```bash
 ./server_quart.py <user_dir> <image_dir> <pwd_path> (server_uid) &
@@ -51,7 +51,7 @@ make
 1. 服务端图片扩展名只接受`.webp`，客户端上传时任意。如需其它格式请自行修改代码。
 2. 图片的唯一标识使用了该图片`dhash`值的`base16384`编码的前五个汉字。
 
-# 简易版API
+# 简易版API（不建议用）
 
 对应执行文件为`server.py`
 
@@ -122,7 +122,7 @@ wget --post-file=image.webp http://[server_domain]/upload?uuid=用户
 1. `用户`是两个(数量不可增减)`utf-8`编码的汉字，唯一标识了某个用户。
 2. 返回的图片名经过了转义。
 
-# Quart版API
+# Quart版API（推荐）
 
 对应执行文件为`server_quart.py`
 
