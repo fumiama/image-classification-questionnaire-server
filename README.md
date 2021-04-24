@@ -41,7 +41,9 @@ make
 1. 服务端图片扩展名只接受`.webp`，客户端上传时任意。如需其它格式请自行修改代码。
 2. 图片的唯一标识使用了该图片`dhash`值的`base16384`编码的前五个汉字。
 
-# API
+# 简易版API
+
+对应执行文件为`server.py`
 
 ### 0. 直接访问
 
@@ -109,6 +111,176 @@ wget --post-file=image.webp http://[server_domain]/upload?uuid=用户
 - 说明:
 1. `用户`是两个(数量不可增减)`utf-8`编码的汉字，唯一标识了某个用户。
 2. 返回的图片名经过了转义。
+
+# Quart版API
+
+对应执行文件为`server_quart.py`
+
+### 0. 直接访问
+
+- 格式: http://[server_domain]/index.html
+
+- 说明: 直接通过简易网页访问服务。
+
+### 1. 注册用户
+
+- 格式: http://[server_domain]/signup?key=1234567890
+
+- 返回:
+1. 成功
+```json
+{"stat":"success", "id":"%XX%XX%XX%XX%XX%XX"}
+```
+2. 密码错误
+```json
+{"stat":"wrong", "id":"null"}
+```
+3. 处理错误
+```json
+{"stat":"error", "id":"null"}
+```
+- 说明:
+
+1. 返回转义的两个`utf-8`编码的汉字，代表下面用到的`uuid`
+2. `key`后跟10位整数，表示密码与当前秒数异或的结果，与服务端相差10秒内有效
+
+### 2. 指定分类(投票)
+
+- 格式: http://[server_domain]/vote?uuid=用户&img=投票的图片&class=n
+
+- 返回:
+1. 成功
+```json
+{"stat":"success"}
+```
+2. 图片名格式非法
+```json
+{"stat":"invimg"}
+```
+3. 用户名格式非法
+```json
+{"stat":"invid"}
+```
+4. 找不到此用户
+```json
+{"stat":"noid"}
+```
+
+- 说明:
+
+1. `uuid`字段容纳两(数量不可增减)个`utf-8`编码的汉字，表示投票用户。
+2. `img`字段容纳五个(数量不可增减)`utf-8`编码的汉字，唯一标识了这张图片。
+3. `class`字段容纳最多184个`ASCII`编码，代表该图片所属标签。
+
+### 3. 下载图片
+
+- 格式: http://[server_domain]/img?path=某一张图片
+
+- 返回:
+1. 成功
+```
+图片数据
+```
+2. 读图片错误
+```json
+{"stat":"readimgerr"}
+```
+3. 无此图片
+```json
+{"stat":"nosuchimg"}
+```
+4. 图片名格式非法
+```json
+{"stat":"invimg"}
+```
+
+- 说明: `目标的图片`是五个(数量不可增减)`utf-8`编码的汉字，唯一标识了这张图片。
+
+### 4. 上传图片
+
+- 格式: `HTTP POST`到http://[server_domain]/upload?uuid=用户
+
+- 返回: 
+1. 成功
+```json
+{"stat":"success"}
+```
+2. 相似或相同图片存在
+```json
+{"stat":"exist"}
+```
+3. 用户名格式非法
+```json
+{"stat":"invid"}
+```
+4. 找不到此用户
+```json
+{"stat":"noid"}
+
+- 说明: 必须为`webp`、`jpg`或`png`格式。使用`wget`时，可使用如下命令。
+
+```bash
+wget --post-file=image.webp http://[server_domain]/upload?uuid=用户
+```
+
+### 5. 从未投票图片中随机选择图片并返回图片数据
+
+- 格式: http://[server_domain]/pickdl?uuid=用户
+
+- 返回:
+1. 成功
+```
+图片数据
+```
+2. 读图片错误
+```json
+{"stat":"readimgerr"}
+```
+3. 无更多图片
+```json
+{"stat":"nomoreimg"}
+```
+4. 无此用户
+```json
+{"stat":"noid"}
+```
+5. 用户名格式非法
+```json
+{"stat":"invid"}
+```
+
+- 说明: `用户`是两个(数量不可增减)`utf-8`编码的汉字，唯一标识了某个用户。
+
+### 6. 从未投票图片中随机选择图片并返回图片名
+
+- 格式: http://[server_domain]/pick?uuid=用户
+
+- 返回:
+1. 成功
+```json
+{"stat":"success", "img":"%XX%XX%XX%XX%XX%XX%XX%XX%XX%XX%XX%XX%XX%XX%XX", "uploader":"%XX%XX%XX%XX%XX%XX"}
+```
+2. 读图片错误
+```json
+{"stat":"readimgerr"}
+```
+3. 无更多图片
+```json
+{"stat":"nomoreimg"}
+```
+4. 无此用户
+```json
+{"stat":"noid"}
+```
+5. 用户名格式非法
+```json
+{"stat":"invid"}
+```
+
+- 说明:
+1. `用户`是两个(数量不可增减)`utf-8`编码的汉字，唯一标识了某个用户。
+2. 返回的图片名经过了转义。
+
 
 # 小工具
 
