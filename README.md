@@ -26,7 +26,7 @@ make
 1. 如果你是`ubuntu`用户，由于该系统绑定端口需要`root`权限，因此需要添加可选参数`server_uid`以在绑定端口后降权运行。
 2. 密码文件`pwd_path`必须为以`UTF16BE`编码存储的两个汉字（包括文件头`0xfeff`），总长`6`字节。
 
-`server.py`的语法如下
+简易版`server.py`的语法如下
 
 ```bash
 ./server.py [-d] <user_dir> <image_dir> <pwd_path> (server_uid)
@@ -34,6 +34,16 @@ make
 
 其中：
 1. `-d`为可选项，如果设置，程序将会以`daemon`运行。
+2. `server_uid`为可选项。如果设置，程序将会在绑定端口后切换到该`uid`处理请求。
+
+`Quart`版`server_quart.py`的语法如下
+
+```bash
+./server_quart.py <user_dir> <image_dir> <pwd_path> (server_uid) &
+```
+
+其中：
+1. 如果添加末尾的`&`，程序将会以`daemon`运行。
 2. `server_uid`为可选项。如果设置，程序将会在绑定端口后切换到该`uid`处理请求。
 
 注意:

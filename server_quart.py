@@ -197,25 +197,12 @@ async def upform():
 async def setuid():
 	if server_uid > 0: os.setuid(server_uid)		#监听后降权
 
-def handle_client() -> None:
-	app.run(host[0], host[1])
-
 if __name__ == '__main__':
-	if len(sys.argv) == 4 or len(sys.argv) == 5 or len(sys.argv) == 6:
-		if sys.argv[1] == "-d":
-			run_daemon = True
-			user_dir = sys.argv[2]
-			image_dir = sys.argv[3]
-			pwd_file = sys.argv[4]
-			if len(sys.argv) == 6: server_uid = int(sys.argv[5])
-			else: server_uid = -1
-		else:
-			run_daemon = False
-			user_dir = sys.argv[1]
-			image_dir = sys.argv[2]
-			pwd_file = sys.argv[3]
-			if len(sys.argv) == 5: server_uid = int(sys.argv[4])
-			else: server_uid = -1
+	if len(sys.argv) == 4 or len(sys.argv) == 5:
+		user_dir = sys.argv[1]
+		image_dir = sys.argv[2]
+		pwd_file = sys.argv[3]
+		server_uid = int(sys.argv[4]) if len(sys.argv) == 5 else -1
 		with open(pwd_file, "rb") as f:
 			pwd = int.from_bytes(f.read()[2:], byteorder="big")		#两个汉字，四个字节
 		if user_dir[-1] != '/': user_dir += '/'
@@ -223,6 +210,6 @@ if __name__ == '__main__':
 			if image_dir[-1] != '/': image_dir += '/'
 			info_json_path = image_dir + "info.json"
 			print("Starting ICQS at: %s:%s" % host, "storage dir:", user_dir, "image dir:", image_dir)
-			handle_client()
+			app.run(host[0], host[1])
 		else: print("Error: image dir", image_dir, "is not exist.")
 	else: print("Usage:", sys.argv[0], "<user_dir> <image_dir> <pwd_path> (server_uid)")
