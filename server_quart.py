@@ -193,6 +193,10 @@ async def upform():
 		else: return {"stat":"noid"}
 	else: return {"stat":"invid"}
 
+@app.before_serving
+async def setuid():
+	if server_uid > 0: os.setuid(server_uid)		#监听后降权
+
 def handle_client() -> None:
 	app.run(host[0], host[1])
 
@@ -219,29 +223,6 @@ if __name__ == '__main__':
 			if image_dir[-1] != '/': image_dir += '/'
 			info_json_path = image_dir + "info.json"
 			print("Starting ICQS at: %s:%s" % host, "storage dir:", user_dir, "image dir:", image_dir)
-			if run_daemon and os.fork() == 0:		#创建daemon
-				os.setsid()
-				#创建孙子进程，而后子进程退出
-				if os.fork() > 0: sys.exit(0)
-				#重定向标准输入流、标准输出流、标准错误
-				flush_io()
-				si = open("/dev/null", 'r')
-				so = open("./log.txt", 'a+')
-				se = open("./log_err.txt", 'a+')
-				os.dup2(si.fileno(), sys.stdin.fileno())
-				os.dup2(so.fileno(), sys.stdout.fileno())
-				os.dup2(se.fileno(), sys.stderr.fileno())
-				pid = os.fork()
-				while pid > 0:			#监控服务是否退出
-					#signal(SIGCHLD, SIG_IGN)
-					#signal(SIGPIPE, SIG_IGN)		# 忽略管道错误
-					os.wait()
-					print("Subprocess exited, restarting...")
-					pid = os.fork()
-				if pid < 0:
-					print("Fork error!")
-				else: handle_client()
-			elif not run_daemon: handle_client()
-			else: print("Creating daemon...")
+			handle_client()
 		else: print("Error: image dir", image_dir, "is not exist.")
 	else: print("Usage:", sys.argv[0], "<user_dir> <image_dir> <pwd_path> (server_uid)")
