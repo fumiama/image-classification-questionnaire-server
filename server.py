@@ -189,10 +189,9 @@ class Resquest(BaseHTTPRequestHandler):
 # Launch 100 listener threads.
 class Thread(threading.Thread):
 	def __init__(self, i: int):
-		threading.Thread.__init__(self)
 		self.i = i
 		signal(SIGPIPE, SIG_IGN)		# 忽略管道错误
-		self.daemon = True
+		threading.Thread.__init__(self)
 		print("Thread", i, "start.")
 		self.start()
 	def run(self):
@@ -211,6 +210,7 @@ def handle_client():
 			t = thread_pool[i]
 			if not t.is_alive():
 				thread_pool[i] = Thread(i)
+				print("Thread", i, "dead. Create a new one called", i+1)
 				i += 1
 		sleep(1)
 
@@ -257,8 +257,8 @@ if __name__ == '__main__':
 				os.dup2(se.fileno(), sys.stderr.fileno())
 				pid = os.fork()
 				while pid > 0:			#监控服务是否退出
-					signal(SIGCHLD, SIG_IGN)
-					signal(SIGPIPE, SIG_IGN)		# 忽略管道错误
+					#signal(SIGCHLD, SIG_IGN)
+					#signal(SIGPIPE, SIG_IGN)		# 忽略管道错误
 					os.wait()
 					print("Subprocess exited, restarting...")
 					pid = os.fork()
