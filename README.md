@@ -216,6 +216,7 @@ wget --post-file=image.webp http://[server_domain]/upload?uuid=用户
 4. 找不到此用户
 ```json
 {"stat":"noid"}
+```
 
 - 说明: 必须为`webp`、`jpg`或`png`格式。使用`wget`时，可使用如下命令。
 
