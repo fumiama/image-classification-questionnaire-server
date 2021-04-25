@@ -68,7 +68,6 @@
 	</head>
 	<body>
 		<script>
-			用户 = "";
 			function 取信(网址, 处理) {
 				var 请求 = new XMLHttpRequest();	//第一步：建立所需的对象
 				请求.open('GET', 网址, true);		//第二步：打开连接,将请求参数写在网址中
@@ -80,9 +79,9 @@
 				};
 			}
 			function 取随机图(){
-				if(用户 == "") alert("未登录!");
+				if(document.cookie == "") alert("未登录!");
 				else {
-					取信("/pick?uuid=" + 用户, function rri(t) {
+					取信("/pick?uuid=" + document.cookie, function rri(t) {
 						j = JSON.parse(t)
 						if(j.stat = "success") document.getElementById("img_display").src = "/img?path=" + j.img;
 						else alert("随机失败，请重试");
@@ -91,7 +90,7 @@
 			}
 			function 登录() {
 				入 = prompt("请输入用户名，错误的用户名无法加载图片","示例");
-				if(入.length == 2) 用户 = 入;
+				if(入.length == 2) document.cookie = 入;
 			}
 			function 编码(文) {
 				文 = escape(文.toString()).replace(/\+/g, "%2B");
@@ -121,23 +120,23 @@
     			}, 0);
 			}
 			function 注册() {
-				if(用户 == "") {
+				if(document.cookie == "") {
 					入 = 编码(prompt("请输入密码"));
 					入 = 六十(入.substring(2,6) + 入.substring(8, 12));
 					码 = ((Date.parse(new Date())/1000) ^ 入).toString().padStart(10, "0");
 					取信("/signup?key=" + 码, function rr(t) {
 						j = JSON.parse(t);
 						if(j.stat == "success") {
-							用户 = decodeURI(j.id);
-							prompt("这是您的用户名，请复制好后妥善保存", 用户);
+							document.cookie = decodeURI(j.id);
+							prompt("这是您的用户名，请复制好后妥善保存", document.cookie);
 						} else alert("错误!");
 					});
 				}
 			}
 			function 投票(类) {
-				if(用户 != "") {
+				if(document.cookie != "") {
 					图 = document.getElementById("img_display").src;
-					取信("/vote?uuid=" + 用户 + "&img=" + 图.substring(图.lastIndexOf('=')+1, 图.length) + "&class=" + 类, function rv(t) {
+					取信("/vote?uuid=" + document.cookie + "&img=" + 图.substring(图.lastIndexOf('=')+1, 图.length) + "&class=" + 类, function rv(t) {
 						/*alert(t);*/
 						取随机图();
 					});
@@ -151,7 +150,7 @@
 				document.getElementById("btn_hide").innerText = 隐?"显示":"隐藏";
 			}
 			function 上传() {
-				document.getElementById("upload_form").action = "upform?uuid=" + 用户;
+				document.getElementById("upload_form").action = "upform?uuid=" + document.cookie;
 			}
 		</script>
 		<div>
