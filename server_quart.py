@@ -135,6 +135,8 @@ def save_img(datas: bytes, user_uuid: str) -> dict:
 		with open(fn, 'wb') as f: copyfileobj(converted, f) if is_converted else f.write(datas)
 		if is_converted: converted.close()
 		if os.path.exists(info_json_path):
+			if os.path.getsize(info_json_path) == 0:
+				os.remove(info_json_path)
 			with open(info_json_path, "r") as f:
 				info_json = json.load(f)
 				info_json[fname] = user_uuid
