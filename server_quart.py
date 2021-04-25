@@ -70,7 +70,9 @@ def do_pick(user_uuid: str, send_name_only: bool):
 					pick_img_name = all_imgs_list[randint(0, all_imgs_len-1)]
 				if send_name_only:
 					if os.path.exists(info_json_path):
-						with open(info_json_path, "rb") as f:
+						if os.path.getsize(info_json_path) == 0:
+							os.remove(info_json_path)
+						with open(info_json_path, "r") as f:
 							info_json = json.load(f)
 						if pick_img_name in info_json.keys():
 							uploader = info_json[pick_img_name]
@@ -133,14 +135,14 @@ def save_img(datas: bytes, user_uuid: str) -> dict:
 		with open(fn, 'wb') as f: copyfileobj(converted, f) if is_converted else f.write(datas)
 		if is_converted: converted.close()
 		if os.path.exists(info_json_path):
-			with open(info_json_path, "rb") as f:
+			with open(info_json_path, "r") as f:
 				info_json = json.load(f)
 				info_json[fname] = user_uuid
 		else:
-			info_json = dict()
+			info_json = {}
 			info_json[fname] = user_uuid
-		with open(info_json_path, "wb") as f:
-			f.write(json.dump(info_json, f))
+		with open(info_json_path, "w") as f:
+			json.dump(info_json, f)
 		return {"stat":"success"}
 	else: return {"stat":"exist"}
 
