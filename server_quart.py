@@ -4,11 +4,11 @@ from random import randint
 from io import BytesIO
 from shutil import copyfileobj
 from urllib.request import quote, unquote
-from time import time, sleep
+from time import time
 from hashlib import md5
 from PIL import Image
 from glob import glob
-import base14, sys, os, img_diff, form_fsm, json
+import base14, sys, os, img_diff, json
 
 host = ('0.0.0.0', 80)
 app = Quart(__name__)
@@ -18,21 +18,20 @@ base14.init_dll('./build/libbase14.so')
 def get_uuid() -> str:
 	return base14.get_base14(md5(str(time()).encode()).digest())[:2]
 
-def flush_io() -> None:
-	sys.stdout.flush()
-	sys.stderr.flush()
+def get_arg(key: str) -> str:
+	return request.args.get(key)
 
 @app.route("/")
 @app.route("/index.html")
-def index():
+def index() -> bytes:
 	with open("./index_quart.html") as f:
 		r = f.read()
 	return r
 
 @app.route("/signup")
-def signup():
+def signup() -> dict:
 	try:
-		diff = int(time()) - (int(request.args.get("key")) ^ pwd)
+		diff = int(time()) - (int(get_arg("key")) ^ pwd)
 		if diff < 10 and diff >= 0:		#验证通过
 			new_uuid = get_uuid()
 			os.makedirs(user_dir + new_uuid)
@@ -41,13 +40,13 @@ def signup():
 	except: return {"stat":"error", "id":"null"}
 
 @app.route("/vote")
-def vote():
+def vote() -> dict:
 	try:
-		cli_uuid = unquote(request.args.get("uuid"))
+		cli_uuid = unquote(get_arg("uuid"))
 		if len(cli_uuid) == 2:			#base14检测
-			cli_img = unquote(request.args.get("img"))
+			cli_img = unquote(get_arg("img"))
 			if len(cli_img) == 5:		#base14检测
-				cli_cls = request.args.get("class")
+				cli_cls = get_arg("class")
 				print("uuid:", cli_uuid, "img:", cli_img, "class:", cli_cls)
 				cli_dir = user_dir + cli_uuid + '/'
 				#os.makedirs(cli_dir, exist_ok=True)
@@ -73,12 +72,14 @@ def do_pick(user_uuid: str, send_name_only: bool):
 					if os.path.exists(info_json_path):
 						if os.path.getsize(info_json_path) == 0:
 							os.remove(info_json_path)
-						with open(info_json_path, "r") as f:
-							info_json = json.load(f)
-						if pick_img_name in info_json.keys():
-							uploader = info_json[pick_img_name]
-						else: uploader = "系统"
-					else: uploader = "系统"
+						try:
+							with open(info_json_path, "r") as f:
+								info_json = json.load(f)
+							if pick_img_name in info_json.keys():
+								uploader = info_json[pick_img_name]
+							else: uploader = "涩酱"
+						except: uploader = "涩酱"
+					else: uploader = "涩酱"
 					return {"stat":"success", "img":quote(pick_img_name), "uploader":quote(uploader)}
 				else:
 					img_path = image_dir + pick_img_name + ".webp"
@@ -92,15 +93,15 @@ def do_pick(user_uuid: str, send_name_only: bool):
 
 @app.route("/pickdl")
 def pickdl():
-	return do_pick(unquote(request.args.get("uuid")), False)
+	return do_pick(unquote(get_arg("uuid")), False)
 
 @app.route("/pick")
 def pick():
-	return do_pick(unquote(request.args.get("uuid")), True)
+	return do_pick(unquote(get_arg("uuid")), True)
 
 @app.route("/img")
 def img():
-	target_img_name = unquote(request.args.get("path"))
+	target_img_name = unquote(get_arg("path"))
 	if len(target_img_name) == 5:		#base14检测
 		img_path = image_dir + target_img_name + ".webp"
 		#print("Get img:", img_path)
@@ -150,8 +151,8 @@ def save_img(datas: bytes, user_uuid: str) -> dict:
 	else: return {"stat":"exist"}
 
 @app.route("/upload", methods=['POST'])
-async def upload():
-	cli_uuid = unquote(request.args.get("uuid"))
+async def upload() -> dict:
+	cli_uuid = unquote(get_arg("uuid"))
 	print("post from:", cli_uuid)
 	if len(cli_uuid) == 2:
 		if os.path.exists(user_dir + cli_uuid):
@@ -160,8 +161,8 @@ async def upload():
 	else: return {"stat":"invid"}
 
 @app.route("/upform", methods=['POST'])
-async def upform():
-	cli_uuid = unquote(request.args.get("uuid"))
+async def upform() -> dict:
+	cli_uuid = unquote(get_arg("uuid"))
 	print("post from:", cli_uuid)
 	if len(cli_uuid) == 2:
 		if os.path.exists(user_dir + cli_uuid):
@@ -173,7 +174,7 @@ async def upform():
 	else: return {"stat":"invid"}
 
 @app.before_first_request
-async def setuid():
+async def setuid() -> None:
 	if server_uid > 0: os.setuid(server_uid)		#监听后降权
 
 if __name__ == '__main__':
@@ -189,6 +190,6 @@ if __name__ == '__main__':
 			if image_dir[-1] != '/': image_dir += '/'
 			info_json_path = image_dir + "info.json"
 			print("Starting ICQS at: %s:%s" % host, "storage dir:", user_dir, "image dir:", image_dir)
-			app.run(host[0], host[1])
+			app.run(*host)
 		else: print("Error: image dir", image_dir, "is not exist.")
-	else: print("Usage:", sys.argv[0], "<user_dir> <image_dir> <pwd_path> (server_uid)")
+	else: print("Usage: <user_dir> <image_dir> <pwd_path> (server_uid)")
