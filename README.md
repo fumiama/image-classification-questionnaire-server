@@ -39,7 +39,7 @@ make
 #### `Quart`版`server_quart.py`的语法如下（高并发）
 
 ```bash
-./server_quart.py <user_dir> <image_dir> <pwd_path> (server_uid) &
+./server_quart.py <user_dir> <image_dir> <pwd_path> (server_uid) 2>&1 > ./log.txt &
 ```
 
 其中：
