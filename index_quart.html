@@ -68,6 +68,22 @@
 	</head>
 	<body>
 		<script>
+			function 增录(名, 值, 日) {
+				var d = new Date();
+				d.setTime(d.getTime()+(日*24*60*60*1000));
+				var 止 = "expires="+d.toGMTString();
+				document.cookie = 名 + "=" + 值 + "; " + 止;
+			}
+			function 取录(名) {
+				var name = 名 + "=";
+				var ca = document.cookie.split(';');
+				for(var i=0; i<ca.length; i++) {
+					var c = ca[i].trim();
+					if (c.indexOf(name)==0) return c.substring(name.length,c.length);
+				}
+				return "";
+			}
+			我 = 取录("uuid");
 			function 取信(网址, 处理) {
 				var 请求 = new XMLHttpRequest();	//第一步：建立所需的对象
 				请求.open('GET', 网址, true);		//第二步：打开连接,将请求参数写在网址中
@@ -79,18 +95,25 @@
 				};
 			}
 			function 取随机图(){
-				if(document.cookie == "") alert("未登录!");
+				if(我 == "") alert("未登录!");
 				else {
-					取信("/pick?uuid=" + document.cookie, function rri(t) {
+					取信("/pick?uuid=" + 我, function rri(t) {
 						j = JSON.parse(t)
-						if(j.stat = "success") document.getElementById("img_display").src = "/img?path=" + j.img;
+						if(j.stat == "success") document.getElementById("img_display").src = "/img?path=" + j.img;
+						else if(j.stat == "nomoreimg") alert("无更多图片!");
 						else alert("随机失败，请重试");
 					});
 				}
 			}
 			function 登录() {
 				入 = prompt("请输入用户名，错误的用户名无法加载图片","示例");
-				if(入.length == 2) document.cookie = 入;
+				if(入 != null) {
+					if(入.length == 2) {
+						我 = 入;
+						增录("uuid", 我, 7);
+					}
+					else if(入.length == 0) document.cookie = 我 = "";
+				}
 			}
 			function 编码(文) {
 				文 = escape(文.toString()).replace(/\+/g, "%2B");
@@ -120,24 +143,24 @@
     			}, 0);
 			}
 			function 注册() {
-				if(document.cookie == "") {
+				if(我 == "") {
 					入 = 编码(prompt("请输入密码"));
 					入 = 六十(入.substring(2,6) + 入.substring(8, 12));
 					码 = ((Date.parse(new Date())/1000) ^ 入).toString().padStart(10, "0");
 					取信("/signup?key=" + 码, function rr(t) {
 						j = JSON.parse(t);
 						if(j.stat == "success") {
-							document.cookie = decodeURI(j.id);
-							prompt("这是您的用户名，请复制好后妥善保存", document.cookie);
+							我 = decodeURI(j.id);
+							增录("uuid", 我, 7);
+							prompt("这是您的用户名，请复制好后妥善保存", 我);
 						} else alert("错误!");
 					});
 				}
 			}
 			function 投票(类) {
-				if(document.cookie != "") {
+				if(我 != "") {
 					图 = document.getElementById("img_display").src;
-					取信("/vote?uuid=" + document.cookie + "&img=" + 图.substring(图.lastIndexOf('=')+1, 图.length) + "&class=" + 类, function rv(t) {
-						/*alert(t);*/
+					取信("/vote?uuid=" + 我 + "&img=" + 图.substring(图.lastIndexOf('=')+1, 图.length) + "&class=" + 类, function rv(t) {
 						取随机图();
 					});
 				} else alert("请登录!");
@@ -150,7 +173,7 @@
 				document.getElementById("btn_hide").innerText = 隐?"显示":"隐藏";
 			}
 			function 上传() {
-				document.getElementById("upload_form").action = "upform?uuid=" + document.cookie;
+				document.getElementById("upload_form").action = "upform?uuid=" + 我;
 			}
 		</script>
 		<div>

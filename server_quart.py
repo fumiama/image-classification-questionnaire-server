@@ -7,6 +7,7 @@ from urllib.request import quote, unquote
 from time import time, sleep
 from hashlib import md5
 from PIL import Image
+from glob import glob
 import base14, sys, os, img_diff, form_fsm, json
 
 host = ('0.0.0.0', 80)
@@ -62,7 +63,7 @@ def do_pick(user_uuid: str, send_name_only: bool):
 		#print("User dir:", user_path)
 		if os.path.exists(user_path):
 			voted_imgs_list = os.listdir(user_path)
-			all_imgs_list = [name[:-5] for name in os.listdir(image_dir)]
+			all_imgs_list = [name[-10:-5] for name in glob(image_dir + "*.webp")]
 			all_imgs_len = len(all_imgs_list)
 			if len(voted_imgs_list) < all_imgs_len:
 				pick_img_name = all_imgs_list[randint(0, all_imgs_len-1)]
@@ -121,7 +122,7 @@ def save_img(datas: bytes, user_uuid: str) -> dict:
 			is_converted = True
 	fname = img_diff.get_dhash_b14_io(converted) if is_converted else img_diff.get_dhash_b14(datas) 
 	no_similar = True
-	all_imgs_list = os.listdir(image_dir)
+	all_imgs_list = [name[-10:-5] for name in glob(image_dir + "*.webp")]
 	this_hash = img_diff.decode_dhash(fname)
 	hash_len = len(this_hash)
 	for img_name in all_imgs_list:
