@@ -159,42 +159,16 @@ async def upload():
 		else: return {"stat":"noid"}
 	else: return {"stat":"invid"}
 
-def do_form_post(f, size: int, skip: int, cli_uuid: str) -> dict:
-	skip += 9
-	file_type = f.read(9).decode()
-	print("post form type:", file_type)
-	if file_type == "image/web" or file_type == "image/png" or file_type == "image/jpe":
-		if file_type == "image/png":
-			skip += 4
-			f.read(4)
-		else:
-			skip += 5
-			f.read(5)
-		datas = f.read(size - skip - 46)		#掐头去尾
-		return save_img(datas, cli_uuid)
-	else: return {"stat":"typeerr"}
-
 @app.route("/upform", methods=['POST'])
 async def upform():
 	cli_uuid = unquote(request.args.get("uuid"))
 	print("post from:", cli_uuid)
-	datas = await request.get_data()
 	if len(cli_uuid) == 2:
 		if os.path.exists(user_dir + cli_uuid):
-			size = len(datas)
-			skip = 0
-			if size > 1024:
-				with BytesIO(datas) as rfile:
-					rfile.seek(0, 0)
-					state = 0
-					while skip < 1024:
-						skip += 1
-						state = form_fsm.scan(state, rfile.read(1)[0])
-						if state == 11:
-							skip += 3
-							rfile.read(3)
-							return do_form_post(rfile, size, skip, cli_uuid)
-							break
+			re = []
+			for f in (await request.files).getlist("img"):
+				re.append({"name":f.filename, **save_img(f.read(), cli_uuid)})
+			return {"result": re}
 		else: return {"stat":"noid"}
 	else: return {"stat":"invid"}
 

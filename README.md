@@ -234,7 +234,42 @@ wget --post-file=image.webp http://[server_domain]/upload?uuid=用户
 wget --post-file=image.webp http://[server_domain]/upload?uuid=用户
 ```
 
-### 5. 从未投票图片中随机选择图片并返回图片数据
+### 5. 以表单形式上传图片
+
+- 格式: `HTTP POST`到http://[server_domain]/upform?uuid=用户
+
+该格式支持批量上传。
+
+- 返回: 
+
+返回时，会将全部结果统一送回。
+
+```json
+{"result":[{"name":"a.jpg","stat":"exist"},{"name":"b.jpg","stat":"exist"},{"name":"c.jpg","stat":"exist"},{"name":"d.jpg","stat":"success"},{"name":"e.jpg","stat":"success"}]}
+```
+
+其中，列表的每一项都遵循如下格式
+
+1. 成功
+```json
+{"name":"xxx","stat":"success"}
+```
+2. 相似或相同图片存在
+```json
+{"name":"xxx","stat":"exist"}
+```
+3. 用户名格式非法
+```json
+{"name":"xxx","stat":"invid"}
+```
+4. 找不到此用户
+```json
+{"name":"xxx","stat":"noid"}
+```
+
+- 说明: 必须为`webp`、`jpg`或`png`格式。
+
+### 6. 从未投票图片中随机选择图片并返回图片数据
 
 - 格式: http://[server_domain]/pickdl?uuid=用户
 
@@ -262,7 +297,7 @@ wget --post-file=image.webp http://[server_domain]/upload?uuid=用户
 
 - 说明: `用户`是两个(数量不可增减)`utf-8`编码的汉字，唯一标识了某个用户。
 
-### 6. 从未投票图片中随机选择图片并返回图片名
+### 7. 从未投票图片中随机选择图片并返回图片名
 
 - 格式: http://[server_domain]/pick?uuid=用户
 
