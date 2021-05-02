@@ -65,14 +65,13 @@ def do_pick(user_uuid: str, send_name_only: bool):
 			all_imgs_list = [name[-10:-5] for name in glob(image_dir + "*.webp")]
 			all_imgs_len = len(all_imgs_list)
 			if len(voted_imgs_list) < all_imgs_len:
-				if len(voted_imgs_list) < all_imgs_len // 3 or all_imgs_len < 10000:
+				if len(voted_imgs_list) <= all_imgs_len*8//10:
 					pick_img_name = all_imgs_list[randint(0, all_imgs_len-1)]
 					while pick_img_name in voted_imgs_list:
 						pick_img_name = all_imgs_list[randint(0, all_imgs_len-1)]
 				else:
-					unvoted_imgs_list = list(
-						set(all_imgs_list).difference(set(voted_imgs_list)))
-					pick_img_name = choice(unvoted_imgs_list)
+					pick_img_name = choice(list(
+						set(all_imgs_list).difference(set(voted_imgs_list))))
 				if send_name_only:
 					if os.path.exists(info_json_path):
 						if os.path.getsize(info_json_path) == 0:
@@ -152,8 +151,8 @@ def save_img(datas: bytes, user_uuid: str) -> dict:
 			info_json[fname] = user_uuid
 		with open(info_json_path, "w") as f:
 			json.dump(info_json, f)
-		return {"stat":"success", "img": quote(fname+".webp")}
-	else: return {"stat":"exist", "img": quote(img_name+".webp")}
+		return {"stat":"success", "img": quote(fname)}
+	else: return {"stat":"exist", "img": quote(img_name)}
 
 @app.route("/upload", methods=['POST'])
 async def upload() -> dict:
