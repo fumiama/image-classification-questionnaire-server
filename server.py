@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from http.server import HTTPServer, BaseHTTPRequestHandler
-from random import randint
+from random import randint, choice
 from io import BytesIO
 from shutil import copyfileobj
 import threading
@@ -43,9 +43,13 @@ class Resquest(BaseHTTPRequestHandler):
 				all_imgs_list = [name[:-5] for name in os.listdir(image_dir)]
 				all_imgs_len = len(all_imgs_list)
 				if len(voted_imgs_list) < all_imgs_len:
-					pick_img_name = all_imgs_list[randint(0, all_imgs_len-1)]
-					while pick_img_name in voted_imgs_list:
+					if len(voted_imgs_list) <= all_imgs_len*8//10:
 						pick_img_name = all_imgs_list[randint(0, all_imgs_len-1)]
+						while pick_img_name in voted_imgs_list:
+							pick_img_name = all_imgs_list[randint(0, all_imgs_len-1)]
+					else:
+						pick_img_name = choice(list(
+							set(all_imgs_list).difference(set(voted_imgs_list))))
 					if send_name_only: self.send_200(quote(pick_img_name).encode(), "text/plain")
 					else:
 						img_path = image_dir + pick_img_name + ".webp"
