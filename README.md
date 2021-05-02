@@ -213,11 +213,11 @@ wget --post-file=image.webp http://[server_domain]/upload?uuid=用户
 - 返回: 
 1. 成功
 ```json
-{"stat":"success"}
+{"stat":"success", "img":"%XX%XX%XX%XX%XX%XX%XX%XX%XX%XX%XX%XX%XX%XX%XX"}
 ```
 2. 相似或相同图片存在
 ```json
-{"stat":"exist"}
+{"stat":"exist", "img":"%XX%XX%XX%XX%XX%XX%XX%XX%XX%XX%XX%XX%XX%XX%XX"}
 ```
 3. 用户名格式非法
 ```json
