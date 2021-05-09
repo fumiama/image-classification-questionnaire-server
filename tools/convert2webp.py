@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import glob, os, threading, sys
+import glob, os, threading, sys, time
 from PIL import Image
 '''
 多线程批量转换某文件夹下的图片到webp
@@ -16,6 +16,7 @@ def from_folder(folder, outfolder):
     for infile in glob.glob(folder + "*.[j p J P][p n P N][e g E G]*"):
         t = threading.Thread(target=create_image, args=[infile, outfolder])
         t.start()
+        time.sleep(0.023)
 
 if __name__ == "__main__":
     if len(sys.argv) == 3:
