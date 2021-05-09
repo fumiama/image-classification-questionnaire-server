@@ -19,5 +19,3 @@ if __name__ == "__main__":
         os.chmod("./post_all.sh", stat.S_IRWXU)
         os.system("./post_all.sh")
     else: print("usage: <img_floder> <post_url>")
-
-        
