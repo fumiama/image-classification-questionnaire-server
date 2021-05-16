@@ -39,6 +39,7 @@ class Thread(threading.Thread):
 			data = r.read()
 			print(save_img(data, "涩酱", image_dir, json_dir))
 			r.release_conn()
+			sleep(DELAY*THREAD_NUM)
 
 def handle_client() -> None:
 	thread_pool = [Thread(i) for i in range(THREAD_NUM)]
