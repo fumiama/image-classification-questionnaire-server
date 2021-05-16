@@ -15,7 +15,7 @@ from base14 import init_dll
 
 RANDOM_IMG_API = "https://api.pixivweb.com/anime18r.php?return=img"
 THREAD_NUM = 8
-DELAY = 2
+DELAY = 8
 
 init_dll('../base14/build/libbase14.so')
 
