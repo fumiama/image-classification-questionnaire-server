@@ -8,19 +8,21 @@ from socket import socket, AF_INET, SOCK_STREAM, SOL_SOCKET, SO_REUSEADDR
 from urllib.request import quote, unquote
 from time import time, sleep
 from hashlib import md5
-from signal import signal, SIGPIPE, SIGCHLD, SIG_IGN
+#from signal import signal, SIGPIPE, SIGCHLD, SIG_IGN
 from PIL import Image
-import base14, sys, os, img_diff, form_fsm
+import sys, os, form_fsm
+from img import get_dhash_b14, get_dhash_b14_io, decode_dhash, hamm_img
+from base14 import init_dll, get_base14
 
 host = ('0.0.0.0', 80)
 byte_succ = "succ".encode()
 byte_erro = "erro".encode()
 byte_null = "null".encode()
 
-base14.init_dll('./build/libbase14.so')
+init_dll('./base14/build/libbase14.so')
 
 def get_uuid() -> str:
-	return base14.get_base14(md5(str(time()).encode()).digest())[:2]
+	return get_base14(md5(str(time()).encode()).digest())[:2]
 
 def flush_io() -> None:
 	sys.stdout.flush()
@@ -175,13 +177,13 @@ class Resquest(BaseHTTPRequestHandler):
 				img2save.save(converted, "WEBP")
 				converted.seek(0)
 				is_converted = True
-		fname = img_diff.get_dhash_b14_io(converted) if is_converted else img_diff.get_dhash_b14(datas) 
+		fname = get_dhash_b14_io(converted) if is_converted else get_dhash_b14(datas) 
 		no_similar = True
 		all_imgs_list = os.listdir(image_dir)
-		this_hash = img_diff.decode_dhash(fname)
+		this_hash = decode_dhash(fname)
 		hash_len = len(this_hash)
 		for img_name in all_imgs_list:
-			if img_diff.hamm_img(this_hash, img_diff.decode_dhash(img_name), hash_len) <= 6:
+			if hamm_img(this_hash, decode_dhash(img_name), hash_len) <= 6:
 				no_similar = False
 				break
 		if no_similar:

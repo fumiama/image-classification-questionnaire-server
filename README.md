@@ -13,6 +13,7 @@ git clone --recursive https://github.com/fumiama/image-classification-questionna
 接下来，你需要安装`cmake`，然后执行以下命令以生成程序所需的C库。
 
 ```bash
+cd base14
 mkdir build
 cd build
 cmake ..

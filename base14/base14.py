@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-from ctypes import CDLL, c_void_p, c_char_p, c_uint64, c_uint32, POINTER, Structure, string_at
+from ctypes import CDLL, c_void_p, c_uint64, c_uint32, POINTER, Structure, string_at
 from platform import machine
 from os import name, environ
+from sys import version_info
 
 #dllpath = './build/libbase14.so'
 #dll = CDLL(dllpath)
@@ -16,7 +17,7 @@ def init_dll(dll_pth: str) -> None:
 
 def this_machine() -> str:
     """Return type ofmachine."""
-    if name == 'nt' and sys.version_info[:2] < (2,7):
+    if name == 'nt' and version_info[:2] < (2,7):
         return environ.get("PROCESSOR_ARCHITEW6432", environ.get('PROCESSOR_ARCHITECTURE',''))
     else: return machine()
 

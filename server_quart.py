@@ -1,22 +1,21 @@
 #!/usr/bin/env python3
 from quart import Quart, request, Response
 from random import randint, choice
-from io import BytesIO
-from shutil import copyfileobj
 from urllib.request import quote, unquote
 from time import time
 from hashlib import md5
-from PIL import Image
 from glob import glob
-import base14, sys, os, img_diff, json
+import sys, os, json
+from base14 import init_dll, get_base14
+from img import save_img
 
 host = ('0.0.0.0', 80)
 app = Quart(__name__)
 
-base14.init_dll('./build/libbase14.so')
+init_dll('./base14/build/libbase14.so')
 
 def get_uuid() -> str:
-	return base14.get_base14(md5(str(time()).encode()).digest())[:2]
+	return get_base14(md5(str(time()).encode()).digest())[:2]
 
 def get_arg(key: str) -> str:
 	return request.args.get(key)
@@ -117,50 +116,13 @@ def img():
 		else: return {"stat":"nosuchimg"}
 	else: return {"stat":"invimg"}
 
-def save_img(datas: bytes, user_uuid: str) -> dict:
-	is_converted = False
-	with Image.open(BytesIO(datas)) as img2save:
-		if img2save.format != "WEBP":		#转换webp
-			converted = BytesIO()
-			img2save.save(converted, "WEBP")
-			converted.seek(0)
-			is_converted = True
-	fname = img_diff.get_dhash_b14_io(converted) if is_converted else img_diff.get_dhash_b14(datas) 
-	no_similar = True
-	all_imgs_list = [name[-10:-5] for name in glob(image_dir + "*.webp")]
-	this_hash = img_diff.decode_dhash(fname)
-	hash_len = len(this_hash)
-	for img_name in all_imgs_list:
-		if img_diff.hamm_img(this_hash, img_diff.decode_dhash(img_name), hash_len) <= 6:
-			no_similar = False
-			break
-	if no_similar:
-		print("Recv file:", fname)
-		fn = os.path.join(image_dir, fname + ".webp")	#生成文件存储路径
-		if is_converted: converted.seek(0)
-		with open(fn, 'wb') as f: copyfileobj(converted, f) if is_converted else f.write(datas)
-		if is_converted: converted.close()
-		if os.path.exists(info_json_path):
-			if os.path.getsize(info_json_path) == 0:
-				os.remove(info_json_path)
-			with open(info_json_path, "r") as f:
-				info_json = json.load(f)
-				info_json[fname] = user_uuid
-		else:
-			info_json = {}
-			info_json[fname] = user_uuid
-		with open(info_json_path, "w") as f:
-			json.dump(info_json, f)
-		return {"stat":"success", "img": quote(fname)}
-	else: return {"stat":"exist", "img": quote(img_name)}
-
 @app.route("/upload", methods=['POST'])
 async def upload() -> dict:
 	cli_uuid = unquote(get_arg("uuid"))
 	print("post from:", cli_uuid)
 	if len(cli_uuid) == 2:
 		if os.path.exists(user_dir + cli_uuid):
-			return save_img(await request.get_data(), cli_uuid)
+			return save_img(await request.get_data(), cli_uuid, image_dir, info_json_path)
 		else: return {"stat":"noid"}
 	else: return {"stat":"invid"}
 
@@ -172,7 +134,7 @@ async def upform() -> dict:
 		if os.path.exists(user_dir + cli_uuid):
 			re = []
 			for f in (await request.files).getlist("img"):
-				re.append({"name":f.filename, **save_img(f.read(), cli_uuid)})
+				re.append({"name":f.filename, **save_img(f.read(), cli_uuid, image_dir, info_json_path)})
 			return {"result": re}
 		else: return {"stat":"noid"}
 	else: return {"stat":"invid"}
