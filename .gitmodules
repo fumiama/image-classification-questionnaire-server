@@ -1,3 +1,3 @@
 [submodule ".base14"]
-	path = .base14
+	path = base14/.base14
 	url = https://github.com/fumiama/base16384.git
