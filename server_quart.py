@@ -8,11 +8,12 @@ from glob import glob
 import sys, os, json
 from base14 import init_dll, get_base14
 from img import save_img
+from platform import system
 
 host = ('0.0.0.0', 80)
 app = Quart(__name__)
 
-init_dll('./base14/build/libbase14.so')
+init_dll('/usr/local/lib/libbase14.' + ('dylib' if system() == 'Darwin' else ('so' if system() == 'Linux' else 'dll') ))
 
 def get_uuid() -> str:
 	return get_base14(md5(str(time()).encode()).digest())[:2]

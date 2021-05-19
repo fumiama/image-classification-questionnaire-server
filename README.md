@@ -4,30 +4,38 @@
 
 # 使用准备
 
-由于引入了其他仓库，因此需要使用`--recursive`进行克隆
+由于使用了[base16384](https://github.com/fumiama/base16384)库，因此需要先行编译安装。
 
 ```bash
-git clone --recursive https://github.com/fumiama/image-classification-questionnaire-server.git
+git clone https://github.com/fumiama/base16384.git
 ```
 
-接下来，你需要安装`cmake`，然后执行以下命令以生成程序所需的C库。
+你需要安装`cmake`，然后执行以下命令以生成程序所需的C库并安装。
 
 ```bash
-cd base14
+cd base16384
 mkdir build
 cd build
 cmake ..
 make
+make install
 ```
 
 你还需要安装`pillow`，`numba`，`imagehash`，`quart`以确保程序运行。
 
 # 开始使用
 
-1. 如果你是`ubuntu`用户，由于该系统绑定端口需要`root`权限，因此需要添加可选参数`server_uid`以在绑定端口后降权运行。
+首先克隆本仓库
+```bash
+git clone https://github.com/fumiama/image-classification-questionnaire-server.git
+```
+
+1. 如果你是`ubuntu`用户，由于该系统绑定`80`端口需要`root`权限，因此需要添加可选参数`server_uid`以在绑定端口后降权运行。
 2. 密码文件`pwd_path`必须为以`UTF16BE`编码存储的两个汉字（包括文件头`0xfeff`），总长`6`字节。
 
-#### 简易版`server.py`的语法如下（使用一段时间后可能会无响应，目前尚未解决）
+#### 简易版`server.py`的语法如下
+
+**注意**：使用一段时间后可能会无响应，目前尚未解决，只能通过`daemon.sh`监控进程是否退出，如果退出则重新拉起。
 
 ```bash
 ./server.py [-d] <user_dir> <image_dir> <pwd_path> (server_uid)

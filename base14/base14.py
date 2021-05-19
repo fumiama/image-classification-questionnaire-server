@@ -33,12 +33,9 @@ class LENDAT(Structure):
 def get_base14(byte_str: bytes) -> str:
     global dll
     byte_len = len(byte_str)
-    #print("data length:", byte_len)
     t = dll.encode(byte_str, byte_len)
     encl = t.contents.len
     encd = string_at(t.contents.data, encl)
-    #print("encode length:", encl, len(encd))
-    #print(encd.decode("utf-16-be"))
     return encd.decode("utf-16-be")
 
 def from_base14(utf16be_byte_str: bytes) -> bytes:

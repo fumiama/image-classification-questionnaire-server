@@ -6,6 +6,7 @@ from urllib3 import PoolManager
 sys.path.append('..')
 from img import save_img
 from base14 import init_dll
+from platform import system
 
 '''
 从API自动爬取图片并保存
@@ -19,7 +20,7 @@ RANDOM_IMG_API = "http://www.dmoe.cc/random.php"
 THREAD_NUM = 8
 DELAY = 8
 
-init_dll('../base14/build/libbase14.so')
+init_dll('/usr/local/lib/libbase14.' + ('dylib' if system() == 'Darwin' else ('so' if system() == 'Linux' else 'dll') ))
 
 def flush_io() -> None:
 	sys.stdout.flush()
