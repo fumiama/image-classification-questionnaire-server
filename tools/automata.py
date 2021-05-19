@@ -13,7 +13,9 @@ from base14 import init_dll
 会将输出重定向到当前目录的log.txt与log_err.txt
 '''
 
-RANDOM_IMG_API = "https://api.pixivweb.com/anime18r.php?return=img"
+#RANDOM_IMG_API = "https://api.pixivweb.com/anime18r.php?return=img"
+#RANDOM_IMG_API = "https://api.pingping6.com/tools/acg2/index.php"
+RANDOM_IMG_API = "http://www.dmoe.cc/random.php"
 THREAD_NUM = 8
 DELAY = 8
 
