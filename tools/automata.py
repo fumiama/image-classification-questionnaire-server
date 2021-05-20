@@ -67,8 +67,8 @@ if __name__ == '__main__':
 			#重定向标准输入流、标准输出流、标准错误
 			flush_io()
 			si = open("/dev/null", 'r')
-			so = open("./log.txt", 'a+')
-			se = open("./log_err.txt", 'a+')
+			so = open("./log.txt", 'w')
+			se = open("./log_err.txt", 'w')
 			os.dup2(si.fileno(), sys.stdin.fileno())
 			os.dup2(so.fileno(), sys.stdout.fileno())
 			os.dup2(se.fileno(), sys.stderr.fileno())
