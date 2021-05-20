@@ -15,8 +15,8 @@ from platform import system
 '''
 
 #RANDOM_IMG_API = "https://api.pixivweb.com/anime18r.php?return=img"
-#RANDOM_IMG_API = "https://api.pingping6.com/tools/acg2/index.php"
-RANDOM_IMG_API = "http://www.dmoe.cc/random.php"
+RANDOM_IMG_API = "https://api.pingping6.com/tools/acg2/index.php"
+#RANDOM_IMG_API = "http://www.dmoe.cc/random.php"
 THREAD_NUM = 8
 DELAY = 8
 
