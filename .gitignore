@@ -135,3 +135,7 @@ pwd.txt
 /datas
 log.txt
 log_err.txt
+*.webp
+users
+pwd
+info.json

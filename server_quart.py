@@ -10,7 +10,7 @@ from base14 import init_dll, get_base14
 from img import save_img
 from platform import system
 
-host = ('0.0.0.0', 80)
+host = ('0.0.0.0', 8080)
 app = Quart(__name__)
 
 init_dll('/usr/local/lib/libbase14.' + ('dylib' if system() == 'Darwin' else ('so' if system() == 'Linux' else 'dll') ))

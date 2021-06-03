@@ -1,0 +1,60 @@
+body {
+    font-size: 2vh;
+}
+/*
+ *具有缩放效果的按钮样式，父级需要设置font-size
+ *可以通过background-color,border-color覆盖得到不同颜色的按钮
+ **/
+button {
+    padding: .3em .8em;
+    border: 1px solid #ffb2c5;
+    /*background: #58a linear-gradient(#77a0bb,#58a);*/
+    background: rgba(255, 210, 216, 0.7) linear-gradient(hsla(0,0%,100%,.2),transparent);
+    border-radius: .2em;
+    /*box-shadow: 0 .05em .25em gray;*/
+    box-shadow: 0 .05em .25em rgba(0,0,0,.5);
+    color: black;
+    text-shadow: 0 -.05em .05em #335166;
+    font-size: 125%;
+    line-height: 1.5;
+}
+input {
+    padding: .3em .8em;
+    border: 1px solid #ffb2c5;
+    /*background: #58a linear-gradient(#77a0bb,#58a);*/
+    background: rgba(255, 210, 216, 0.7) linear-gradient(hsla(0,0%,100%,.2),transparent);
+    border-radius: .2em;
+    /*box-shadow: 0 .05em .25em gray;*/
+    box-shadow: 0 .05em .25em rgba(0,0,0,.5);
+    color: black;
+    text-shadow: 0 -.05em .05em #335166;
+    font-size: 125%;
+    line-height: 1.5;
+}
+div{
+    text-align:center;
+}
+.img_box{
+    padding-bottom:100%;
+}
+.img_box img{
+    position:fixed;
+    top:0;
+    bottom:0;
+    left:0;
+    right:0;
+    height:100%;
+    margin:auto;
+    z-index: -1;
+    max-height: 100%;
+    max-width: 100%;
+    object-fit: contain;
+    object-position: center;
+    vertical-align: center;
+}
+.btn_show_foot{
+    z-index: 1;
+    position: absolute;
+    bottom: 16px;
+    width: 100%;
+}
