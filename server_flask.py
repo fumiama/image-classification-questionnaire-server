@@ -147,18 +147,11 @@ async def upform() -> dict:
 		else: return {"stat":"noid"}
 	else: return {"stat":"invid"}
 
-@app.before_first_request
-async def setuid() -> None:
-	if server_uid > 0:		#监听后降权
-		os.setuid(server_uid)
-		os.setgid(server_uid)
-
 if __name__ == '__main__':
-	if len(sys.argv) == 4 or len(sys.argv) == 5:
+	if len(sys.argv) == 3 or len(sys.argv) == 4:
 		user_dir = sys.argv[1]
 		image_dir = sys.argv[2]
 		pwd_file = sys.argv[3]
-		server_uid = int(sys.argv[4]) if len(sys.argv) == 5 else -1
 		with open(pwd_file, "rb") as f:
 			pwd = int.from_bytes(f.read()[2:], byteorder="big")		#两个汉字，四个字节
 		if user_dir[-1] != '/': user_dir += '/'
