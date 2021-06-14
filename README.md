@@ -23,7 +23,7 @@ make
 make install
 ```
 
-你还需要安装`pillow`，`numba`，`imagehash`，`quart`以确保程序运行。
+你还需要安装`pillow`，`numba`，`imagehash`，`quart/flask`, `gevent`(如果使用`flask`)以确保程序运行。
 
 # 开始使用
 
@@ -47,10 +47,10 @@ git clone https://github.com/fumiama/image-classification-questionnaire-server.g
 1. `-d`为可选项，如果设置，程序将会以`daemon`运行。
 2. `server_uid`为可选项。如果设置，程序将会在绑定端口后切换到该`uid`处理请求。
 
-#### `Quart`版`server_quart.py`的语法如下（高并发）
+#### `Quart/Flask`版`server_quart/flask.py`的语法如下（高并发）
 
 ```bash
-./server_quart.py <user_dir> <image_dir> <pwd_path> (server_uid) 2>&1 > ./log.txt &
+./server_quart/flask.py <user_dir> <image_dir> <pwd_path> (server_uid) 2>&1 > ./log.txt &
 ```
 
 其中：
@@ -133,7 +133,7 @@ wget --post-file=image.webp http://[server_domain]/upload?uuid=用户
 1. `用户`是两个(数量不可增减)`utf-8`编码的汉字，唯一标识了某个用户。
 2. 返回的图片名经过了转义。
 
-# Quart版API（推荐）
+# Quart/Flask版API（推荐）
 
 对应执行文件为`server_quart.py`
 
@@ -219,6 +219,8 @@ wget --post-file=image.webp http://[server_domain]/upload?uuid=用户
 
 ### 4. 上传图片
 
+> Quart版目前无法上传大于20M的图片
+
 - 格式: `HTTP POST`到http://[server_domain]/upload?uuid=用户
 
 - 返回: 
@@ -238,6 +240,14 @@ wget --post-file=image.webp http://[server_domain]/upload?uuid=用户
 ```json
 {"stat":"noid"}
 ```
+5. 接收图片错误
+```json
+{"stat":"recverr"}
+```
+6. 不是图片
+```json
+{"stat": "notanimg"}
+```
 
 - 说明: 必须为`webp`、`jpg`或`png`格式。使用`wget`时，可使用如下命令。
 
@@ -246,6 +256,8 @@ wget --post-file=image.webp http://[server_domain]/upload?uuid=用户
 ```
 
 ### 5. 以表单形式上传图片
+
+> 该API目前无法上传合计大于20M的文件
 
 - 格式: `HTTP POST`到http://[server_domain]/upform?uuid=用户
 
@@ -276,6 +288,14 @@ wget --post-file=image.webp http://[server_domain]/upload?uuid=用户
 4. 找不到此用户
 ```json
 {"name":"xxx","stat":"noid"}
+```
+5. 接收图片错误
+```json
+{"stat":"recverr"}
+```
+6. 不是图片
+```json
+{"stat": "notanimg"}
 ```
 
 - 说明: 必须为`webp`、`jpg`或`png`格式。

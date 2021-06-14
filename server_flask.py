@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from base14.base14 import init_dll_in
-from quart import Quart, request, Response
+from gevent import pywsgi
+from flask import Flask, request, Response
 from random import randint, choice
 from urllib.request import quote, unquote
 from time import time
@@ -11,7 +12,7 @@ from base14 import init_dll_in, get_base14
 from img import save_img
 
 host = ('0.0.0.0', 80)
-app = Quart(__name__)
+app = Flask(__name__)
 MAXBUFFSZ = 16*1024*1024
 
 init_dll_in('/usr/local/lib/')
@@ -124,7 +125,12 @@ async def upload() -> dict:
 	print("post from:", cli_uuid)
 	if len(cli_uuid) == 2:
 		if os.path.exists(user_dir + cli_uuid):
-			return save_img(await request.get_data(), cli_uuid, image_dir, info_json_path)
+			length = int(request.headers.get('content-length'))
+			print("准备接收:", length, "bytes")
+			if length < MAXBUFFSZ:
+				return save_img(request.get_data(), cli_uuid, image_dir, info_json_path)
+			else:
+				return save_img(request.stream.read(length), cli_uuid, image_dir, info_json_path)
 		else: return {"stat":"noid"}
 	else: return {"stat":"invid"}
 
@@ -135,7 +141,7 @@ async def upform() -> dict:
 	if len(cli_uuid) == 2:
 		if os.path.exists(user_dir + cli_uuid):
 			re = []
-			for f in (await request.files).getlist("img"):
+			for f in request.files.getlist("img"):
 				re.append({"name":f.filename, **save_img(f.read(), cli_uuid, image_dir, info_json_path)})
 			return {"result": re}
 		else: return {"stat":"noid"}
@@ -160,6 +166,6 @@ if __name__ == '__main__':
 			if image_dir[-1] != '/': image_dir += '/'
 			info_json_path = image_dir + "info.json"
 			print("Starting ICQS at: %s:%s" % host, "storage dir:", user_dir, "image dir:", image_dir)
-			app.run(*host)
+			pywsgi.WSGIServer(host, app).serve_forever()
 		else: print("Error: image dir", image_dir, "is not exist.")
 	else: print("Usage: <user_dir> <image_dir> <pwd_path> (server_uid)")

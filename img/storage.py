@@ -1,5 +1,5 @@
 from img import get_dhash_b14, get_dhash_b14_io, decode_dhash, hamm_img
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 from io import BytesIO
 from glob import glob
 from os import path, remove
@@ -10,12 +10,15 @@ from shutil import copyfileobj
 def save_img(datas: bytes, user_uuid: str, image_dir: str, info_json_path: str) -> dict:
 	is_converted = False
 	print("Save img...")
-	with Image.open(BytesIO(datas)) as img2save:
-		if img2save.format != "WEBP":		#转换webp
-			converted = BytesIO()
-			img2save.save(converted, "WEBP")
-			converted.seek(0)
-			is_converted = True
+	try:
+		with Image.open(BytesIO(datas)) as img2save:
+			if img2save.format != "WEBP":		#转换webp
+				converted = BytesIO()
+				img2save.save(converted, "WEBP")
+				converted.seek(0)
+				is_converted = True
+	except UnidentifiedImageError:
+		return {"stat": "notanimg"}
 	fname = get_dhash_b14_io(converted) if is_converted else get_dhash_b14(datas)
 	print("Recv file:", fname, end='')
 	no_similar = True
