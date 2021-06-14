@@ -161,4 +161,4 @@ if __name__ == '__main__':
 			print("Starting ICQS at: %s:%s" % host, "storage dir:", user_dir, "image dir:", image_dir)
 			pywsgi.WSGIServer(host, app).serve_forever()
 		else: print("Error: image dir", image_dir, "is not exist.")
-	else: print("Usage: <user_dir> <image_dir> <pwd_path> (server_uid)")
+	else: print("Usage: <user_dir> <image_dir> <pwd_path>")
