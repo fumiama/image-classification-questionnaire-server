@@ -120,7 +120,7 @@ def img():
 	else: return {"stat":"invimg"}
 
 @app.route("/upload", methods=['POST'])
-async def upload() -> dict:
+def upload() -> dict:
 	cli_uuid = unquote(get_arg("uuid"))
 	print("post from:", cli_uuid)
 	if len(cli_uuid) == 2:
@@ -135,7 +135,7 @@ async def upload() -> dict:
 	else: return {"stat":"invid"}
 
 @app.route("/upform", methods=['POST'])
-async def upform() -> dict:
+def upform() -> dict:
 	cli_uuid = unquote(get_arg("uuid"))
 	print("post from:", cli_uuid)
 	if len(cli_uuid) == 2:
@@ -148,7 +148,7 @@ async def upform() -> dict:
 	else: return {"stat":"invid"}
 
 @app.before_first_request
-async def setuid() -> None:
+def setuid() -> None:
 	if server_uid > 0:		#监听后降权
 		os.setuid(server_uid)
 
