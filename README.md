@@ -55,7 +55,7 @@ git clone https://github.com/fumiama/image-classification-questionnaire-server.g
 
 其中：
 1. 如果添加末尾的`&`，程序将会以`daemon`运行。
-2. `server_uid`为`server_quart`的可选项。如果设置，程序将会在绑定端口后切换到该`uid`处理请求。`flask`自动降权，无需处理。
+2. `server_uid`为可选项。如果设置，程序将会在绑定端口后切换到该`uid`处理请求。
 
 注意:
 

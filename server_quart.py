@@ -145,7 +145,6 @@ async def upform() -> dict:
 async def setuid() -> None:
 	if server_uid > 0:		#监听后降权
 		os.setuid(server_uid)
-		os.setgid(server_uid)
 
 if __name__ == '__main__':
 	if len(sys.argv) == 4 or len(sys.argv) == 5:
