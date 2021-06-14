@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from ctypes import CDLL, c_void_p, c_uint64, c_uint32, POINTER, Structure, string_at
-from platform import machine
+from platform import machine, system
 from os import name, environ
 from sys import version_info
 
@@ -14,6 +14,9 @@ def init_dll(dll_pth: str) -> None:
     dll = CDLL(dll_pth)
     dll.encode.restype = POINTER(LENDAT)
     dll.decode.restype = POINTER(LENDAT)
+
+def init_dll_in(dir: str) -> None:
+    init_dll(dir + 'libbase14.' + ('dylib' if system() == 'Darwin' else ('so' if system() == 'Linux' else 'dll') ))
 
 def this_machine() -> str:
     """Return type ofmachine."""

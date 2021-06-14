@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from base14.base14 import init_dll_in
 from quart import Quart, request, Response
 from random import randint, choice
 from urllib.request import quote, unquote
@@ -6,14 +7,13 @@ from time import time
 from hashlib import md5
 from glob import glob
 import sys, os, json
-from base14 import init_dll, get_base14
+from base14 import init_dll_in, get_base14
 from img import save_img
-from platform import system
 
 host = ('0.0.0.0', 80)
 app = Quart(__name__)
 
-init_dll('/usr/local/lib/libbase14.' + ('dylib' if system() == 'Darwin' else ('so' if system() == 'Linux' else 'dll') ))
+init_dll_in('/usr/local/lib/')
 
 def get_uuid() -> str:
 	return get_base14(md5(str(time()).encode()).digest())[:2]
@@ -21,14 +21,14 @@ def get_uuid() -> str:
 def get_arg(key: str) -> str:
 	return request.args.get(key)
 
-@app.route("/")
-@app.route("/index.html")
+@app.route("/", methods=['GET'])
+@app.route("/index.html", methods=['GET'])
 def index() -> bytes:
 	with open("./index_quart.html") as f:
 		r = f.read()
 	return r
 
-@app.route("/signup")
+@app.route("/signup", methods=['GET'])
 def signup() -> dict:
 	try:
 		diff = int(time()) - (int(get_arg("key")) ^ pwd)
@@ -39,7 +39,7 @@ def signup() -> dict:
 		else: return {"stat":"wrong", "id":"null"}
 	except: return {"stat":"error", "id":"null"}
 
-@app.route("/vote")
+@app.route("/vote", methods=['GET'])
 def vote() -> dict:
 	try:
 		cli_uuid = unquote(get_arg("uuid"))
@@ -95,15 +95,15 @@ def do_pick(user_uuid: str, send_name_only: bool):
 		else: return {"stat":"noid"}
 	else: return {"stat":"invid"}
 
-@app.route("/pickdl")
+@app.route("/pickdl", methods=['GET'])
 def pickdl():
 	return do_pick(unquote(get_arg("uuid")), False)
 
-@app.route("/pick")
+@app.route("/pick", methods=['GET'])
 def pick():
 	return do_pick(unquote(get_arg("uuid")), True)
 
-@app.route("/img")
+@app.route("/img", methods=['GET'])
 def img():
 	target_img_name = unquote(get_arg("path"))
 	if len(target_img_name) == 5:		#base14检测
@@ -142,7 +142,9 @@ async def upform() -> dict:
 
 @app.before_first_request
 async def setuid() -> None:
-	if server_uid > 0: os.setuid(server_uid)		#监听后降权
+	if server_uid > 0:		#监听后降权
+		os.setuid(server_uid)
+		os.setgid(server_uid)
 
 if __name__ == '__main__':
 	if len(sys.argv) == 4 or len(sys.argv) == 5:
