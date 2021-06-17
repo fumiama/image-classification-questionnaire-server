@@ -5,8 +5,7 @@ import sys, os
 from urllib3 import PoolManager
 sys.path.append('..')
 from img import save_img
-from base14 import init_dll
-from platform import system
+from base14 import init_dll_in
 
 '''
 从API自动爬取图片并保存
@@ -14,13 +13,13 @@ from platform import system
 会将输出重定向到当前目录的log.txt与log_err.txt
 '''
 
-#RANDOM_IMG_API = "https://api.pixivweb.com/anime18r.php?return=img"
-RANDOM_IMG_API = "https://api.pingping6.com/tools/acg2/index.php"
+RANDOM_IMG_API = "https://api.pixivweb.com/anime18r.php?return=img"
+#RANDOM_IMG_API = "https://api.pingping6.com/tools/acg2/index.php"
 #RANDOM_IMG_API = "http://www.dmoe.cc/random.php"
-THREAD_NUM = 8
+THREAD_NUM = 1
 DELAY = 8
 
-init_dll('/usr/local/lib/libbase14.' + ('dylib' if system() == 'Darwin' else ('so' if system() == 'Linux' else 'dll') ))
+init_dll_in('/usr/local/lib/')
 
 def flush_io() -> None:
 	sys.stdout.flush()
