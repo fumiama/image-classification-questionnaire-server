@@ -40,7 +40,7 @@ class Thread(threading.Thread):
 			r = self.p.request('GET', RANDOM_IMG_API, preload_content=False)
 			data = r.read()
 			print(save_img(data, "涩酱", image_dir, json_dir))
-			r.release_conn()
+			#r.release_conn()
 			sleep(DELAY*THREAD_NUM)
 
 def handle_client() -> None:
