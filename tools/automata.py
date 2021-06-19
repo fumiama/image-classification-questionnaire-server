@@ -16,8 +16,8 @@ from base14 import init_dll_in
 RANDOM_IMG_API = "https://api.pixivweb.com/anime18r.php?return=img"
 #RANDOM_IMG_API = "https://api.pingping6.com/tools/acg2/index.php"
 #RANDOM_IMG_API = "http://www.dmoe.cc/random.php"
-THREAD_NUM = 1
-DELAY = 8
+THREAD_NUM = 4
+DELAY = 2
 
 init_dll_in('/usr/local/lib/')
 
@@ -40,7 +40,7 @@ class Thread(threading.Thread):
 			r = self.p.request('GET', RANDOM_IMG_API, preload_content=False)
 			data = r.read()
 			print(save_img(data, "涩酱", image_dir, json_dir))
-			#r.release_conn()
+			r.release_conn()
 			sleep(DELAY*THREAD_NUM)
 
 def handle_client() -> None:
