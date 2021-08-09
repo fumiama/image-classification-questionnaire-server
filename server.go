@@ -31,66 +31,113 @@ var (
 )
 
 func signup(resp http.ResponseWriter, req *http.Request) {
-	var auth struct {
-		Key int `http:"key"`
-	}
-	if err := unpack(req, &auth); err != nil {
-		http.Error(resp, err.Error(), http.StatusBadRequest)
-		fmt.Println("[/signup] bad request.")
+	q := req.URL.Query()
+	key, ok := q["key"]
+	if len(key) == 0 {
+		http.Error(resp, "400 BAD REQUEST\nInvalid key.", http.StatusBadRequest)
+		fmt.Println("[/signup] invalid key.")
 	} else {
-		diff := int(time.Now().Unix()) - (auth.Key ^ pwd)
-		if diff < 10 && diff >= 0 {
-			uuid := getUUID()
-			os.MkdirAll(usrdir+uuid, 0755)
-			fmt.Printf("[/signup] create user: %s.\n", uuid)
-			fmt.Fprintf(resp, "{\"stat\": \"success\", \"id\": \"%s\"}", url.QueryEscape((uuid)))
+		keyint, err := strconv.Atoi(key[0])
+		if !ok || err != nil {
+			http.Error(resp, "400 BAD REQUEST", http.StatusBadRequest)
+			fmt.Println("[/signup] bad request.")
 		} else {
-			io.WriteString(resp, "{\"stat\": \"wrong\", \"id\": \"null\"}")
-			fmt.Println("[/signup] auth failed.")
+			diff := int(time.Now().Unix()) - (keyint ^ pwd)
+			if diff < 10 && diff >= 0 {
+				uuid := getUUID()
+				os.MkdirAll(usrdir+uuid, 0755)
+				fmt.Printf("[/signup] create user: %s.\n", uuid)
+				fmt.Fprintf(resp, "{\"stat\": \"success\", \"id\": \"%s\"}", url.QueryEscape((uuid)))
+			} else {
+				io.WriteString(resp, "{\"stat\": \"wrong\", \"id\": \"null\"}")
+				fmt.Println("[/signup] auth failed.")
+			}
 		}
 	}
 }
 
 func img(resp http.ResponseWriter, req *http.Request) {
-	var data struct {
-		Path string `http:"path"`
-	}
-	if err := unpack(req, &data); err != nil {
-		http.Error(resp, err.Error(), http.StatusBadRequest)
+	q := req.URL.Query()
+	path, ok := q["path"]
+	if !ok || len(path) == 0 {
+		http.Error(resp, "400 BAD REQUEST", http.StatusBadRequest)
 		fmt.Println("[/img] bad request.")
 	} else {
-		if len([]rune(data.Path)) == 5 {
-			imgpath := imgdir + data.Path + ".webp"
+		if len([]rune(path[0])) == 5 {
+			imgpath := imgdir + path[0] + ".webp"
 			if exists(imgpath) {
 				http.ServeFile(resp, req, imgpath)
-				fmt.Printf("[/img] serve %s.\n", data.Path)
+				fmt.Printf("[/img] serve %s.\n", path[0])
 			} else {
 				resp.WriteHeader(404)
 				io.WriteString(resp, "{\"stat\": \"nosuchimg\"}")
-				fmt.Printf("[/img] %s not found.\n", data.Path)
+				fmt.Printf("[/img] %s not found.\n", path[0])
 			}
 		} else {
 			resp.WriteHeader(404)
 			io.WriteString(resp, "{\"stat\": \"invimg\"}")
-			fmt.Printf("[/img] invalid image path %s.\n", data.Path)
+			fmt.Printf("[/img] invalid image path %s.\n", path[0])
 		}
+	}
+}
+
+func upload(resp http.ResponseWriter, req *http.Request) {
+	// 检查是否POST请求
+	if req.Method != "POST" {
+		http.Error(resp, "405 Method Not Allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	// 检查uid
+	q := req.URL.Query()
+	uid, ok := q["uuid"]
+	if !ok || len(uid) == 0 {
+		http.Error(resp, "400 BAD REQUEST", http.StatusBadRequest)
+		fmt.Println("[/upload] bad request.")
+	} else if len([]rune(uid[0])) == 2 && exists(usrdir+uid[0]) {
+		if req.ContentLength <= 0 {
+			io.WriteString(resp, "{\"stat\": \"emptybody\"}")
+			fmt.Println("[/upload] invalid content length.")
+		} else {
+			buf := make([]byte, req.ContentLength)
+			result := make([]byte, 1, 1024)
+			result[0] = '['
+			cnt := 0
+			var err error
+			cl := int(req.ContentLength)
+			for n := 0; err == nil && cnt < cl; {
+				n, err = req.Body.Read(buf[cnt:])
+				cnt += n
+			}
+			fmt.Printf("[/upload] receive %v/%v bytes.\n", cnt, req.ContentLength)
+			if err == nil || cnt == cl {
+				result = append(result, '{')
+				result = append(result, imago.Str2bytes(saveimgbytes(buf, uid[0]))...)
+				result = append(result, '}')
+			} else {
+				fmt.Printf("[/upload] receive body error: %v\n", err)
+			}
+			result = append(result, ']')
+			io.WriteString(resp, "{\"stat\": \"success\", \"result\": "+imago.Bytes2str(result)+"}")
+		}
+	} else {
+		io.WriteString(resp, "{\"stat\": \"noid\"}")
+		fmt.Println("[/upload] no such user.")
 	}
 }
 
 func upform(resp http.ResponseWriter, req *http.Request) {
 	// 检查是否POST请求
 	if req.Method != "POST" {
-		resp.WriteHeader(405)
+		http.Error(resp, "405 Method Not Allowed", http.StatusMethodNotAllowed)
 		return
 	}
 	// 检查uid
-	var data struct {
-		Uid string `http:"uuid"`
-	}
-	if err := unpack(req, &data); err != nil {
-		http.Error(resp, err.Error(), http.StatusBadRequest)
-		fmt.Println("[/upform] bad request.")
-	} else if len([]rune(data.Uid)) == 2 && exists(usrdir+data.Uid) {
+	q := req.URL.Query()
+	uid, ok := q["uuid"]
+	if !ok || len(uid) == 0 {
+		http.Error(resp, "400 BAD REQUEST", http.StatusBadRequest)
+		fmt.Println("[/upload] bad request.")
+	} else if len([]rune(uid[0])) == 2 && exists(usrdir+uid[0]) {
 		err := req.ParseMultipartForm(16 * 1024 * 1024)
 		if err == nil {
 			result := make([]byte, 1, 1024)
@@ -101,7 +148,7 @@ func upform(resp http.ResponseWriter, req *http.Request) {
 				fo, err := f.Open()
 				if err == nil {
 					result = append(result, '{')
-					result = append(result, imago.Str2bytes(saveimg(fo, data.Uid))...)
+					result = append(result, imago.Str2bytes(saveimg(fo, uid[0]))...)
 					result = append(result, tail...)
 				} else {
 					fmt.Printf("[/upform] save %v error.\n", f.Filename)
@@ -153,6 +200,8 @@ func main() {
 			http.HandleFunc("/signup", signup)
 			http.HandleFunc("/img", img)
 			http.HandleFunc("/upform", upform)
+			http.HandleFunc("/upload", upload)
+			// http.Handle("/yuka/", http.StripPrefix("/yuka/", http.FileServer(http.Dir(imgdir))))
 			log.Fatal(http.Serve(listener, nil))
 		}
 	} else {
