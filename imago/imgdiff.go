@@ -6,19 +6,12 @@ import (
 	"encoding/binary"
 	"fmt"
 	"image"
-	"unsafe"
 
 	"github.com/corona10/goimagehash"
 	base14 "github.com/fumiama/go-base16384"
 )
 
 var lastchar = "㴁"
-
-func str2bytes(s string) []byte {
-	x := (*[2]uintptr)(unsafe.Pointer(&s))
-	h := [3]uintptr{x[0], x[1], x[1]}
-	return *(*[]byte)(unsafe.Pointer(&h))
-}
 
 // bytes82uint64 字节数(大端)组转成int(无符号的)
 func bytes82uint64(b []byte) (uint64, error) {
@@ -35,7 +28,7 @@ func bytes82uint64(b []byte) (uint64, error) {
 }
 
 func decodeDHash(imgname string) *goimagehash.ImageHash {
-	b, err := base14.UTF82utf16be(str2bytes(imgname + lastchar))
+	b, err := base14.UTF82utf16be(Str2bytes(imgname + lastchar))
 	if err == nil {
 		dhb := base14.Decode(b)
 		if dhb != nil {
@@ -45,7 +38,6 @@ func decodeDHash(imgname string) *goimagehash.ImageHash {
 				return goimagehash.NewImageHash(dh, goimagehash.DHash)
 			}
 		}
-
 	}
 	return nil
 }
