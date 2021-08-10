@@ -2,9 +2,7 @@
 package imago
 
 import (
-	"bytes"
 	"encoding/binary"
-	"fmt"
 	"image"
 
 	"github.com/corona10/goimagehash"
@@ -12,20 +10,6 @@ import (
 )
 
 var lastchar = "㴁"
-
-// bytes82uint64 字节数(大端)组转成int(无符号的)
-func bytes82uint64(b []byte) (uint64, error) {
-	if len(b) == 9 {
-		b = b[:7]
-	}
-	if len(b) == 8 {
-		bytesBuffer := bytes.NewBuffer(b)
-		var tmp uint64
-		err := binary.Read(bytesBuffer, binary.BigEndian, &tmp)
-		return tmp, err
-	}
-	return 0, fmt.Errorf("%s", "bytes lenth is invaild!")
-}
 
 func decodeDHash(imgname string) *goimagehash.ImageHash {
 	b, err := base14.UTF82utf16be(Str2bytes(imgname + lastchar))

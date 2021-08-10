@@ -1,0 +1,10 @@
+syntax = "proto3";
+package votego;
+
+message vote {
+    map<string, uint32> data = 1;
+}
+
+message users {
+    map<string, vote> data = 1;
+}

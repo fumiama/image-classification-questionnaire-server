@@ -2,25 +2,29 @@ package main
 
 import (
 	"bytes"
+	"crypto/md5"
 	"encoding/binary"
 	"fmt"
-	"image"
 	_ "image/gif"
 	_ "image/jpeg"
 	_ "image/png"
 	"io"
-	"net/url"
 	"os"
-	"strings"
+	"time"
+	"unsafe"
 
 	base14 "github.com/fumiama/go-base16384"
-	"github.com/fumiama/image-classification-questionnaire-server/imago"
-	"github.com/kolesa-team/go-webp/decoder"
-	"github.com/kolesa-team/go-webp/encoder"
-	"github.com/kolesa-team/go-webp/webp"
+	"github.com/fumiama/image-classification-questionnaire-server/votego"
 )
 
-var imgbuff = make([]byte, 4*1024*1024) // 4m
+func getuuid() string {
+	stamp := time.Now().Unix()
+	timestruct := [3]uintptr{uintptr(unsafe.Pointer(&stamp)), uintptr(8), uintptr(8)}
+	timebytes := *(*[]byte)(unsafe.Pointer(&timestruct))
+	ima := md5.Sum(timebytes)
+	uuid, _ := base14.UTF16be2utf8(base14.Encode(ima[:]))
+	return string(uuid)[:6]
+}
 
 // u82int 字节数(大端)组转成int(无符号的)
 func u82int(s string) (int, error) {
@@ -55,64 +59,68 @@ func exists(path string) bool {
 	return err == nil || os.IsExist(err)
 }
 
-func saveimgbytes(b []byte, uid string) string {
-	r := bytes.NewReader(b)
-	img, _, err := image.Decode(r)
-	iswebp := false
-	if err != nil {
-		r.Seek(0, io.SeekStart)
-		img, err = webp.Decode(r, &decoder.Options{})
-		if err == nil {
-			iswebp = true
-		} else {
-			fmt.Printf("[saveimg] decode image error: %v\n", err)
-			return "\"stat\": \"notanimg\""
-		}
-	}
-	dh, err := imago.GetDHashStr(img)
-	if err != nil {
-		return "\"stat\": \"dherr\""
-	}
-	entry, err := os.ReadDir(imgdir)
-	if err != nil {
-		return "\"stat\": \"lserr\""
-	}
-	for _, i := range entry {
-		if !i.IsDir() {
-			name := i.Name()
-			if strings.HasSuffix(name, ".webp") {
-				name = name[:len(name)-5]
-				diff, err := imago.HammDistance(dh, name)
-				if err == nil && diff < 10 { // 认为是一张图片
-					fmt.Printf("[saveimg] old %s.\n", name)
-					return "\"stat\":\"exist\", \"img\": \"" + url.QueryEscape(name) + "\""
-				}
-			}
-		}
-	}
-	f, err := os.Create(imgdir + dh + ".webp")
-	if err != nil {
-		return "\"stat\": \"ioerr\""
-	}
-	defer f.Close()
-	if !iswebp {
-		options, err := encoder.NewLossyEncoderOptions(encoder.PresetDefault, 75)
-		if err != nil || webp.Encode(f, img, options) != nil {
-			return "\"stat\": \"encerr\""
-		}
-	} else {
-		r.Seek(0, io.SeekStart)
-		c, err := io.Copy(f, r)
-		if err != nil {
-			return "\"stat\": \"ioerr\""
-		}
-		fmt.Printf("[saveimg] save %d bytes.\n", c)
-	}
-	fmt.Printf("[saveimg] new %s.\n", dh)
-	return "\"stat\":\"success\", \"img\": \"" + url.QueryEscape(dh) + "\""
+func userexists(uid string) bool {
+	_, ok := users.Data[uid]
+	return ok
 }
 
-func saveimg(r io.Reader, uid string) string {
-	r.Read(imgbuff)
-	return saveimgbytes(imgbuff, uid)
+func flushvote() {
+	timer := time.NewTicker(time.Minute)
+	defer timer.Stop()
+	for range timer.C {
+		if votechanged {
+			err := saveusers()
+			if err != nil {
+				fmt.Println("[saveusers] error:", err)
+			} else {
+				fmt.Println("[saveusers] success.")
+			}
+			votechanged = false
+		} else {
+			fmt.Println("[saveusers] vote not change.")
+		}
+	}
+}
+
+func loadusers(pbfile string) error {
+	if exists(pbfile) {
+		f, err := os.Open(pbfile)
+		if err == nil {
+			data, err1 := io.ReadAll(f)
+			if err1 == nil {
+				if len(data) > 0 {
+					return users.Unmarshal(data)
+				}
+			}
+			return err1
+		}
+		return err
+	}
+	users.Data = make(map[string]*votego.Vote)
+	return nil
+}
+
+func saveusers() error {
+	data, err := users.Marshal()
+	if err == nil {
+		if exists(usrdir) {
+			f, err1 := os.OpenFile(userpb, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0644)
+			if err1 == nil {
+				defer f.Close()
+				_, err2 := f.Write(data)
+				return err2
+			}
+			return err1
+		}
+	}
+	return err
+}
+
+func getkeys(m map[string]uint32) []string {
+	// 数组默认长度为map长度,后面append时,不需要重新申请内存和拷贝,效率很高
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	return keys
 }
