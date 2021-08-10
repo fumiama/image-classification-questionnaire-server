@@ -25,7 +25,7 @@ make install
 ## Python准备
 你还需要安装`pillow`，`numba`，`imagehash`，`quart/flask`, `gevent`(如果使用`flask`)以确保程序运行。
 ## Golang准备
-你只需要在使用前运行
+你只需要安装`libwebp-dev`，并在使用前运行
 ```bash
 go mod tidy
 ```

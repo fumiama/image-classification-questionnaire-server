@@ -3,12 +3,14 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"strconv"
 	"strings"
 
 	"github.com/fumiama/image-classification-questionnaire-server/configo"
 	"github.com/fumiama/imago"
+	"github.com/sirupsen/logrus"
 )
 
 var conf configo.Data
@@ -28,6 +30,10 @@ func saveconf(configfile string) error {
 		return err1
 	}
 	return err
+}
+
+func init() {
+	imago.Setloglevel(logrus.ErrorLevel)
 }
 
 func main() {
@@ -51,6 +57,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	fmt.Println("Unmashal success.")
 	conf.Upload = make(map[string]string)
 	conf.Users = make(map[string]*configo.DataVote)
 	for _, i := range entry {
@@ -82,6 +89,7 @@ func main() {
 			}
 		}
 	}
+	fmt.Println("Scan user dir success.")
 	entry, err = os.ReadDir(imgdir)
 	if err != nil {
 		panic(err)
@@ -97,11 +105,10 @@ func main() {
 						panic(err)
 					}
 					upnusi, ok := uploder[dh]
-					if !ok {
-						upnusi = "涩酱"
-					}
 					_, newdh := imago.Saveimgbytes(f, imgdir, true, 1)
-					conf.Upload[newdh] = upnusi
+					if ok {
+						conf.Upload[newdh] = upnusi
+					}
 					if newdh != dh {
 						old2new[dh] = newdh
 						uids, ok := img2usr[dh]
@@ -118,7 +125,9 @@ func main() {
 			}
 		}
 	}
+	fmt.Println("Scan img dir success.")
 	saveconf("conf.pb")
+	fmt.Println("Save config success.")
 	o2n, err := json.Marshal(&old2new)
 	if err != nil {
 		panic(err)
@@ -126,4 +135,5 @@ func main() {
 	f, _ := os.Create("old2new.json")
 	defer f.Close()
 	f.Write(o2n)
+	fmt.Println("Save old2new success.")
 }

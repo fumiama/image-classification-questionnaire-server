@@ -24,10 +24,11 @@ func index(resp http.ResponseWriter, req *http.Request) {
 
 var (
 	pwd         int
-	configfile  string
-	imgdir      string
 	conf        configo.Data
+	imgdir      string
+	configfile  string
 	confchanged = false
+	defuploader = url.QueryEscape("涩酱")
 )
 
 func signup(resp http.ResponseWriter, req *http.Request) {
@@ -250,7 +251,13 @@ func pickof(resp http.ResponseWriter, req *http.Request, isdl bool) {
 			http.ServeFile(resp, req, imgpath)
 			log.Println("[/pickdl]", name, ".")
 		} else {
-			io.WriteString(resp, "{\"stat\": \"success\", \"img\": \""+url.QueryEscape(name)+"\", \"uploader\": \""+url.QueryEscape(conf.Upload[name])+"\"}")
+			uploader, ok := conf.Upload[name]
+			if !ok {
+				uploader = defuploader
+			} else {
+				uploader = url.QueryEscape(uploader)
+			}
+			io.WriteString(resp, "{\"stat\": \"success\", \"img\": \""+url.QueryEscape(name)+"\", \"uploader\": \""+uploader+"\"}")
 			log.Println("[/pick]", name, ".")
 		}
 	} else {
@@ -270,7 +277,7 @@ func pickdl(resp http.ResponseWriter, req *http.Request) {
 func init() {
 	log.SetFormatter(&easy.Formatter{
 		TimestampFormat: "2006-01-02 15:04:05",
-		LogFormat:       "[server][%time%][%lvl%]: %msg% \n",
+		LogFormat:       "[server][%time%][%lvl%]: %msg%",
 	})
 	log.SetLevel(log.DebugLevel)
 }
@@ -323,6 +330,6 @@ func main() {
 			log.Fatal(http.Serve(listener, nil))
 		}
 	} else {
-		log.Println("Usage: <listen_addr> <configfile> <imgdir> <password> (userid)")
+		fmt.Println("Usage: <listen_addr> <configfile> <imgdir> <password> (userid)")
 	}
 }

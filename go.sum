@@ -4,8 +4,8 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/fumiama/go-base16384 v1.1.0 h1:4npregEpgJ4HtHYNMcw7eabSSO8GIqfG3xGZWtcYcIA=
 github.com/fumiama/go-base16384 v1.1.0/go.mod h1:YCaxEQyBX717X2lMlJvdccNhA83zhKRR/ipPOIIIQj8=
-github.com/fumiama/imago v1.0.5 h1:xz+NqKK0m7XfgY8RpnFsLPOakzwaX0097IklGxHcuNs=
-github.com/fumiama/imago v1.0.5/go.mod h1:naRy/7P4oiwGwqAsT4Em7eWhf7T0RUxeLvRhLyToh90=
+github.com/fumiama/imago v1.0.6 h1:tREtnkAjFkki86NihbHSMhxPfLNlUDC5bZf2JRK8BDI=
+github.com/fumiama/imago v1.0.6/go.mod h1:naRy/7P4oiwGwqAsT4Em7eWhf7T0RUxeLvRhLyToh90=
 github.com/golang/protobuf v1.5.0/go.mod h1:FsONVRAS9T7sI+LIUmWTfcYkHO4aIWwzhcaSAoJOfIk=
 github.com/golang/protobuf v1.5.2 h1:ROPKBNFfQgOUMifHyP+KYbvpjbdoFNs+aK7DXlji0Tw=
 github.com/golang/protobuf v1.5.2/go.mod h1:XVQd3VNwM+JqD3oG2Ue2ip4fOMUkwXdXDdiuN0vRsmY=
