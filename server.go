@@ -157,7 +157,7 @@ func upform(resp http.ResponseWriter, req *http.Request) {
 		http.Error(resp, "400 BAD REQUEST", http.StatusBadRequest)
 		log.Errorln("[/upload] bad request.")
 	} else if len([]rune(uid[0])) == 2 && userexists(uid[0]) {
-		err := req.ParseMultipartForm(16 * 1024 * 1024)
+		err := req.ParseMultipartForm(64 * 1024 * 1024)
 		if err == nil {
 			result := make([]byte, 1, 1024)
 			result[0] = '['
