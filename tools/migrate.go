@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"runtime"
 	"strconv"
 	"strings"
 
@@ -100,6 +101,7 @@ func main() {
 			if strings.HasSuffix(name, ".webp") {
 				dh := name[:len(name)-5]
 				if len([]rune(dh)) == 5 {
+					runtime.GC()
 					f, err := os.ReadFile(imgdir + name)
 					if err != nil {
 						panic(err)
