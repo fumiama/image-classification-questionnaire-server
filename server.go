@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"io"
-	"log"
 	"net"
 	"net/http"
 	"net/url"
@@ -13,8 +12,10 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/fumiama/image-classification-questionnaire-server/imago"
-	"github.com/fumiama/image-classification-questionnaire-server/votego"
+	"github.com/fumiama/image-classification-questionnaire-server/configo"
+	"github.com/fumiama/imago"
+	log "github.com/sirupsen/logrus"
+	easy "github.com/t-tomalak/logrus-easy-formatter"
 )
 
 func index(resp http.ResponseWriter, req *http.Request) {
@@ -23,11 +24,10 @@ func index(resp http.ResponseWriter, req *http.Request) {
 
 var (
 	pwd         int
-	usrdir      string
+	configfile  string
 	imgdir      string
-	userpb      string
-	users       votego.Users
-	votechanged = false
+	conf        configo.Data
+	confchanged = false
 )
 
 func signup(resp http.ResponseWriter, req *http.Request) {
@@ -40,28 +40,28 @@ func signup(resp http.ResponseWriter, req *http.Request) {
 	key, ok := q["key"]
 	if !ok {
 		http.Error(resp, "400 BAD REQUEST\nInvalid key.", http.StatusBadRequest)
-		fmt.Println("[/signup] invalid key.")
+		log.Errorln("[/signup] invalid key.")
 	} else {
 		keyint, err := strconv.Atoi(key[0])
 		if !ok || err != nil {
 			http.Error(resp, "400 BAD REQUEST", http.StatusBadRequest)
-			fmt.Println("[/signup] bad request.")
+			log.Errorln("[/signup] bad request.")
 		} else {
 			diff := int(time.Now().Unix()) - (keyint ^ pwd)
 			if diff < 10 && diff >= 0 {
 				uuid := getuuid()
-				for users.Data[uuid] != nil {
+				for conf.Users[uuid] != nil {
 					uuid = getuuid()
 				}
-				users.Data[uuid] = new(votego.Vote)
-				users.Data[uuid].Data = make(map[string]uint32)
-				fmt.Println("[/signup] create new map.")
-				fmt.Printf("[/signup] create user: %s.\n", uuid)
+				conf.Users[uuid] = new(configo.DataVote)
+				conf.Users[uuid].Data = make(map[string]uint32)
+				log.Println("[/signup] create new map.")
+				log.Printf("[/signup] create user: %s.\n", uuid)
 				fmt.Fprintf(resp, "{\"stat\": \"success\", \"id\": \"%s\"}", url.QueryEscape((uuid)))
-				votechanged = true
+				confchanged = true
 			} else {
 				io.WriteString(resp, "{\"stat\": \"wrong\", \"id\": \"null\"}")
-				fmt.Println("[/signup] auth failed.")
+				log.Errorln("[/signup] auth failed.")
 			}
 		}
 	}
@@ -77,22 +77,22 @@ func img(resp http.ResponseWriter, req *http.Request) {
 	path, ok := q["path"]
 	if !ok {
 		http.Error(resp, "400 BAD REQUEST", http.StatusBadRequest)
-		fmt.Println("[/img] bad request.")
+		log.Errorln("[/img] bad request.")
 	} else {
 		if len([]rune(path[0])) == 5 {
 			imgpath := imgdir + path[0] + ".webp"
 			if imago.Imgexsits(path[0]) {
 				http.ServeFile(resp, req, imgpath)
-				fmt.Printf("[/img] serve %s.\n", path[0])
+				log.Printf("[/img] serve %s.\n", path[0])
 			} else {
 				resp.WriteHeader(404)
 				io.WriteString(resp, "{\"stat\": \"nosuchimg\"}")
-				fmt.Printf("[/img] %s not found.\n", path[0])
+				log.Errorf("[/img] %s not found.\n", path[0])
 			}
 		} else {
 			resp.WriteHeader(404)
 			io.WriteString(resp, "{\"stat\": \"invimg\"}")
-			fmt.Printf("[/img] invalid image path %s.\n", path[0])
+			log.Errorf("[/img] invalid image path %s.\n", path[0])
 		}
 	}
 }
@@ -108,11 +108,11 @@ func upload(resp http.ResponseWriter, req *http.Request) {
 	uid, ok := q["uuid"]
 	if !ok {
 		http.Error(resp, "400 BAD REQUEST", http.StatusBadRequest)
-		fmt.Println("[/upload] bad request.")
+		log.Errorln("[/upload] bad request.")
 	} else if len([]rune(uid[0])) == 2 && userexists(uid[0]) {
 		if req.ContentLength <= 0 {
 			io.WriteString(resp, "{\"stat\": \"emptybody\"}")
-			fmt.Println("[/upload] invalid content length.")
+			log.Errorln("[/upload] invalid content length.")
 		} else {
 			buf := make([]byte, req.ContentLength)
 			result := make([]byte, 1, 1024)
@@ -124,20 +124,23 @@ func upload(resp http.ResponseWriter, req *http.Request) {
 				n, err = req.Body.Read(buf[cnt:])
 				cnt += n
 			}
-			fmt.Printf("[/upload] receive %v/%v bytes.\n", cnt, req.ContentLength)
+			log.Printf("[/upload] receive %v/%v bytes.\n", cnt, req.ContentLength)
 			if err == nil || cnt == cl {
+				ret, dh := imago.Saveimgbytes(buf, imgdir, false, 3)
 				result = append(result, '{')
-				result = append(result, imago.Str2bytes(imago.Saveimgbytes(buf, imgdir, uid[0], false))...)
+				result = append(result, imago.Str2bytes(ret)...)
 				result = append(result, '}')
+				conf.Upload[dh] = uid[0]
+				confchanged = true
 			} else {
-				fmt.Printf("[/upload] receive body error: %v\n", err)
+				log.Errorf("[/upload] receive body error: %v\n", err)
 			}
 			result = append(result, ']')
 			io.WriteString(resp, "{\"stat\": \"success\", \"result\": "+imago.Bytes2str(result)+"}")
 		}
 	} else {
 		io.WriteString(resp, "{\"stat\": \"noid\"}")
-		fmt.Println("[/upload] no such user.")
+		log.Errorln("[/upload] no such user.")
 	}
 }
 
@@ -152,7 +155,7 @@ func upform(resp http.ResponseWriter, req *http.Request) {
 	uid, ok := q["uuid"]
 	if !ok {
 		http.Error(resp, "400 BAD REQUEST", http.StatusBadRequest)
-		fmt.Println("[/upload] bad request.")
+		log.Errorln("[/upload] bad request.")
 	} else if len([]rune(uid[0])) == 2 && userexists(uid[0]) {
 		err := req.ParseMultipartForm(16 * 1024 * 1024)
 		if err == nil {
@@ -160,25 +163,28 @@ func upform(resp http.ResponseWriter, req *http.Request) {
 			result[0] = '['
 			tail := imago.Str2bytes("}, ")
 			for _, f := range req.MultipartForm.File["img"] {
-				fmt.Printf("[/upform] receive %v of %v bytes.\n", f.Filename, f.Size)
+				log.Printf("[/upform] receive %v of %v bytes.\n", f.Filename, f.Size)
 				fo, err := f.Open()
 				if err == nil {
+					ret, dh := imago.Saveimg(fo, imgdir, 3)
 					result = append(result, '{')
-					result = append(result, imago.Str2bytes(imago.Saveimg(fo, imgdir, uid[0]))...)
+					result = append(result, imago.Str2bytes(ret)...)
 					result = append(result, tail...)
+					conf.Upload[dh] = uid[0]
+					confchanged = true
 				} else {
-					fmt.Printf("[/upform] save %v error.\n", f.Filename)
+					log.Errorf("[/upform] save %v error.\n", f.Filename)
 				}
 			}
 			result = append(result[:len(result)-2], ']')
 			io.WriteString(resp, "{\"stat\": \"success\", \"result\": "+imago.Bytes2str(result)+"}")
 		} else {
 			io.WriteString(resp, "{\"stat\": \"ioerr\"}")
-			fmt.Println("[/upform] parse multipart form error.")
+			log.Errorln("[/upform] parse multipart form error.")
 		}
 	} else {
 		io.WriteString(resp, "{\"stat\": \"noid\"}")
-		fmt.Println("[/upform] no such user.")
+		log.Errorln("[/upform] no such user.")
 	}
 }
 
@@ -194,30 +200,30 @@ func vote(resp http.ResponseWriter, req *http.Request) {
 	cls, ok2 := q["class"]
 	if !ok || !ok1 || !ok2 {
 		http.Error(resp, "400 BAD REQUEST", http.StatusBadRequest)
-		fmt.Println("[/vote] bad request.")
+		log.Errorln("[/vote] bad request.")
 	} else if len([]rune(uid[0])) == 2 && userexists(uid[0]) {
 		if len([]rune(img[0])) == 5 {
 			class, err := strconv.Atoi(cls[0])
 			if err == nil && class >= 0 && class <= 7 {
-				fmt.Printf("[/vote] user %s voted %d for %s.\n", uid[0], class, img[0])
-				if users.Data[uid[0]].Data == nil {
-					users.Data[uid[0]].Data = make(map[string]uint32)
+				log.Printf("[/vote] user %s voted %d for %s.\n", uid[0], class, img[0])
+				if conf.Users[uid[0]].Data == nil {
+					conf.Users[uid[0]].Data = make(map[string]uint32)
 				}
-				users.Data[uid[0]].Data[img[0]] = uint32(class)
+				conf.Users[uid[0]].Data[img[0]] = uint32(class)
 				io.WriteString(resp, "{\"stat\": \"success\"}")
-				fmt.Println("[/vote] success.")
-				votechanged = true
+				log.Println("[/vote] success.")
+				confchanged = true
 			} else {
 				io.WriteString(resp, "{\"stat\": \"invclass\"}")
-				fmt.Println("[/vote] invalid class", class, ".")
+				log.Errorln("[/vote] invalid class", class, ".")
 			}
 		} else {
 			io.WriteString(resp, "{\"stat\": \"invimg\"}")
-			fmt.Println("[/vote] invalid image", img[0], ".")
+			log.Errorln("[/vote] invalid image", img[0], ".")
 		}
 	} else {
 		io.WriteString(resp, "{\"stat\": \"invid\"}")
-		fmt.Println("[/vote] invalid uid", uid[0], ".")
+		log.Errorln("[/vote] invalid uid", uid[0], ".")
 	}
 }
 
@@ -232,24 +238,24 @@ func pickof(resp http.ResponseWriter, req *http.Request, isdl bool) {
 	uid, ok := q["uuid"]
 	if !ok {
 		http.Error(resp, "400 BAD REQUEST", http.StatusBadRequest)
-		fmt.Println("[pickof] bad request.")
+		log.Errorln("[pickof] bad request.")
 	} else if len([]rune(uid[0])) == 2 && userexists(uid[0]) {
-		exclude := getkeys(users.Data[uid[0]].Data)
+		exclude := getkeys(conf.Users[uid[0]].Data)
 		name := imago.Pick(exclude)
 		if name == "" {
 			io.WriteString(resp, "{\"stat\": \"nomoreimg\"}")
-			fmt.Println("[pickof] no more image.")
+			log.Errorln("[pickof] no more image.")
 		} else if isdl {
 			imgpath := imgdir + name + ".webp"
 			http.ServeFile(resp, req, imgpath)
-			fmt.Println("[/pickdl]", name, ".")
+			log.Println("[/pickdl]", name, ".")
 		} else {
-			io.WriteString(resp, "{\"stat\": \"success\", \"img\": \""+url.QueryEscape(name)+"\", \"uploader\": \"nuller\"}")
-			fmt.Println("[/pick]", name, ".")
+			io.WriteString(resp, "{\"stat\": \"success\", \"img\": \""+url.QueryEscape(name)+"\", \"uploader\": \""+url.QueryEscape(conf.Upload[name])+"\"}")
+			log.Println("[/pick]", name, ".")
 		}
 	} else {
 		io.WriteString(resp, "{\"stat\": \"noid\"}")
-		fmt.Println("[pickof] no such user.")
+		log.Errorln("[pickof] no such user.")
 	}
 }
 
@@ -261,20 +267,24 @@ func pickdl(resp http.ResponseWriter, req *http.Request) {
 	pickof(resp, req, true)
 }
 
+func init() {
+	log.SetFormatter(&easy.Formatter{
+		TimestampFormat: "2006-01-02 15:04:05",
+		LogFormat:       "[server][%time%][%lvl%]: %msg% \n",
+	})
+	log.SetLevel(log.DebugLevel)
+}
+
 func main() {
 	arglen := len(os.Args)
 	if arglen == 5 || arglen == 6 {
-		usrdir = os.Args[2]
+		configfile = os.Args[2]
 		imgdir = os.Args[3]
-		if usrdir[len(usrdir)-1] != '/' {
-			usrdir += "/"
-		}
-		userpb = usrdir + "data.pb"
-		err := loadusers(userpb)
+		err := loadconf(configfile)
 		if err != nil {
 			panic(err)
 		}
-		go flushvote()
+		go flushconf()
 		if imgdir[len(imgdir)-1] != '/' {
 			imgdir += "/"
 		}
@@ -313,6 +323,6 @@ func main() {
 			log.Fatal(http.Serve(listener, nil))
 		}
 	} else {
-		fmt.Println("Usage: <listen_addr> <usrdir> <imgdir> <password> (userid)")
+		log.Println("Usage: <listen_addr> <configfile> <imgdir> <password> (userid)")
 	}
 }

@@ -14,7 +14,8 @@ import (
 	"unsafe"
 
 	base14 "github.com/fumiama/go-base16384"
-	"github.com/fumiama/image-classification-questionnaire-server/votego"
+	"github.com/fumiama/image-classification-questionnaire-server/configo"
+	log "github.com/sirupsen/logrus"
 )
 
 func getuuid() string {
@@ -60,58 +61,57 @@ func exists(path string) bool {
 }
 
 func userexists(uid string) bool {
-	_, ok := users.Data[uid]
+	_, ok := conf.Users[uid]
 	return ok
 }
 
-func flushvote() {
+func flushconf() {
 	timer := time.NewTicker(time.Minute)
 	defer timer.Stop()
 	for range timer.C {
-		if votechanged {
-			err := saveusers()
+		if confchanged {
+			err := saveconf()
 			if err != nil {
-				fmt.Println("[saveusers] error:", err)
+				log.Errorln("[saveusers] error:", err)
 			} else {
-				fmt.Println("[saveusers] success.")
+				log.Println("[saveusers] success.")
 			}
-			votechanged = false
+			confchanged = false
 		} else {
-			fmt.Println("[saveusers] vote not change.")
+			log.Println("[saveusers] vote not change.")
 		}
 	}
 }
 
-func loadusers(pbfile string) error {
+func loadconf(pbfile string) error {
 	if exists(pbfile) {
 		f, err := os.Open(pbfile)
 		if err == nil {
 			data, err1 := io.ReadAll(f)
 			if err1 == nil {
 				if len(data) > 0 {
-					return users.Unmarshal(data)
+					return conf.Unmarshal(data)
 				}
 			}
 			return err1
 		}
 		return err
 	}
-	users.Data = make(map[string]*votego.Vote)
+	conf.Upload = make(map[string]string)
+	conf.Users = make(map[string]*configo.DataVote)
 	return nil
 }
 
-func saveusers() error {
-	data, err := users.Marshal()
+func saveconf() error {
+	data, err := conf.Marshal()
 	if err == nil {
-		if exists(usrdir) {
-			f, err1 := os.OpenFile(userpb, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0644)
-			if err1 == nil {
-				defer f.Close()
-				_, err2 := f.Write(data)
-				return err2
-			}
-			return err1
+		f, err1 := os.OpenFile(configfile, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0644)
+		if err1 == nil {
+			defer f.Close()
+			_, err2 := f.Write(data)
+			return err2
 		}
+		return err1
 	}
 	return err
 }

@@ -1,0 +1,10 @@
+syntax = "proto3";
+package configo;
+
+message data {
+    message vote {
+        map<string, uint32> data = 1;
+    }
+    map<string, vote> users = 2;
+    map<string, string> upload = 3;
+}
