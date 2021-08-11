@@ -38,6 +38,7 @@ go mod tidy
 git clone --depth=1 https://github.com/fumiama/image-classification-questionnaire-server.git
 ```
 ### Golang版
+#### 1. 命令行参数
 1. 如果你是`ubuntu`用户，由于该系统绑定`80`端口需要`root`权限，因此需要添加可选参数`userid`以在绑定端口后降权运行。
 2. 密码必须为两个汉字，在运行后密码将在命令行被隐藏，但不会清除命令历史记录，请手动清除。
 ```bash
@@ -46,6 +47,12 @@ Usage: <listen_addr> <configfile> <imgdir> <password> (userid) &
 注意：
 1. 如果添加末尾的`&`，程序将会以`daemon`运行。
 2. `userid`为可选项。如果设置，程序将会在绑定端口后切换到该`uid`处理请求。
+#### 2. 编译
+- 如果使用`gc`，添加`-ldflags "-s -w"`编译即可。
+- 如果使用`gccgo`，推荐使用如下优化参数以达到最佳效果。
+```bash
+go build -compiler gccgo -gccgoflags "-Wa,--strip-local-absolute,-R -s -Wl,-x,-X,--sort-common,--enable-new-dtags,--hash-style=gnu -fno-bounds-check -freg-struct-return -O3" -o im
+```
 
 ### Python版
 1. 如果你是`ubuntu`用户，由于该系统绑定`80`端口需要`root`权限，因此需要添加可选参数`server_uid`以在绑定端口后降权运行。

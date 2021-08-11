@@ -277,7 +277,7 @@ func signup(resp http.ResponseWriter, req *http.Request) {
 				conf.Users[uuid] = new(configo.DataVote)
 				conf.Users[uuid].Data = make(map[string]uint32)
 				log.Println("[/signup] create new map.")
-				log.Printf("[/signup] create user: %s.\n", uuid)
+				log.Printf("[/signup] create user: %s.", uuid)
 				fmt.Fprintf(resp, "{\"stat\": \"success\", \"id\": \"%s\"}", url.QueryEscape((uuid)))
 				confchanged = true
 			} else {
@@ -304,16 +304,16 @@ func img(resp http.ResponseWriter, req *http.Request) {
 			imgpath := imgdir + path[0] + ".webp"
 			if imago.Imgexsits(path[0]) {
 				http.ServeFile(resp, req, imgpath)
-				log.Printf("[/img] serve %s.\n", path[0])
+				log.Printf("[/img] serve %s.", path[0])
 			} else {
 				resp.WriteHeader(404)
 				io.WriteString(resp, "{\"stat\": \"nosuchimg\"}")
-				log.Errorf("[/img] %s not found.\n", path[0])
+				log.Errorf("[/img] %s not found.", path[0])
 			}
 		} else {
 			resp.WriteHeader(404)
 			io.WriteString(resp, "{\"stat\": \"invimg\"}")
-			log.Errorf("[/img] invalid image path %s.\n", path[0])
+			log.Errorf("[/img] invalid image path %s.", path[0])
 		}
 	}
 }
@@ -345,7 +345,7 @@ func upload(resp http.ResponseWriter, req *http.Request) {
 				n, err = req.Body.Read(buf[cnt:])
 				cnt += n
 			}
-			log.Printf("[/upload] receive %v/%v bytes.\n", cnt, req.ContentLength)
+			log.Printf("[/upload] receive %v/%v bytes.", cnt, req.ContentLength)
 			if err == nil || cnt == cl {
 				ret, dh := imago.Saveimgbytes(buf, imgdir, false, 3)
 				result = append(result, '{')
@@ -354,7 +354,7 @@ func upload(resp http.ResponseWriter, req *http.Request) {
 				conf.Upload[dh] = uid[0]
 				confchanged = true
 			} else {
-				log.Errorf("[/upload] receive body error: %v\n", err)
+				log.Errorf("[/upload] receive body error: %v", err)
 			}
 			result = append(result, ']')
 			io.WriteString(resp, "{\"stat\": \"success\", \"result\": "+imago.Bytes2str(result)+"}")
@@ -384,7 +384,7 @@ func upform(resp http.ResponseWriter, req *http.Request) {
 			result[0] = '['
 			tail := imago.Str2bytes("}, ")
 			for _, f := range req.MultipartForm.File["img"] {
-				log.Printf("[/upform] receive %v of %v bytes.\n", f.Filename, f.Size)
+				log.Printf("[/upform] receive %v of %v bytes.", f.Filename, f.Size)
 				fo, err := f.Open()
 				if err == nil {
 					ret, dh := imago.Saveimg(fo, imgdir, 3)
@@ -394,7 +394,7 @@ func upform(resp http.ResponseWriter, req *http.Request) {
 					conf.Upload[dh] = uid[0]
 					confchanged = true
 				} else {
-					log.Errorf("[/upform] save %v error.\n", f.Filename)
+					log.Errorf("[/upform] save %v error.", f.Filename)
 				}
 			}
 			result = append(result[:len(result)-2], ']')
@@ -426,7 +426,7 @@ func vote(resp http.ResponseWriter, req *http.Request) {
 		if len([]rune(img[0])) == 5 {
 			class, err := strconv.Atoi(cls[0])
 			if err == nil && class >= 0 && class <= 7 {
-				log.Printf("[/vote] user %s voted %d for %s.\n", uid[0], class, img[0])
+				log.Printf("[/vote] user %s voted %d for %s.", uid[0], class, img[0])
 				if conf.Users[uid[0]].Data == nil {
 					conf.Users[uid[0]].Data = make(map[string]uint32)
 				}
@@ -497,7 +497,7 @@ func pickdl(resp http.ResponseWriter, req *http.Request) {
 func init() {
 	log.SetFormatter(&easy.Formatter{
 		TimestampFormat: "2006-01-02 15:04:05",
-		LogFormat:       "[server][%time%][%lvl%]: %msg%",
+		LogFormat:       "[%time%][%lvl%]: %msg%\n",
 	})
 	log.SetLevel(log.DebugLevel)
 }

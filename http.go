@@ -72,13 +72,13 @@ func flushconf() {
 		if confchanged {
 			err := saveconf()
 			if err != nil {
-				log.Errorln("[saveusers] error:", err)
+				log.Errorln("[saveconf] error:", err)
 			} else {
-				log.Println("[saveusers] success.")
+				log.Println("[saveconf] success.")
 			}
 			confchanged = false
 		} else {
-			log.Println("[saveusers] vote not change.")
+			log.Println("[saveconf] vote not change.")
 		}
 	}
 }
