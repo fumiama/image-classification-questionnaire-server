@@ -124,11 +124,13 @@ func predicturl(url string, loli bool, newcls bool, hasr18 bool, nopredict bool)
 	filefullpath := imgdir + dh + ".webp"
 	logrus.Infoln("[predicturl] file path:", filefullpath, ".")
 	if !nopredict {
-		n := gsc.PredictFile(filefullpath, norindex)
-		logrus.Infoln("[predicturl] nor:", n, ".")
 		p = gsc.PredictFile(filefullpath, eroindex)
 		logrus.Infoln("[predicturl] ero:", p, ".")
-		p += n / 2
+		if newcls {
+			n := gsc.PredictFile(filefullpath, norindex)
+			logrus.Infoln("[predicturl] nor:", n, ".")
+			p = (n + p) / 2
+		}
 	}
 	logrus.Infoln("[predicturl] loli mae:", p, ".")
 	if loli {
