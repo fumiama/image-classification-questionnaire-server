@@ -138,17 +138,17 @@ func predicturl(url string, loli bool, newcls bool, hasr18 bool, nopredict bool)
 			if newcls {
 				if p < 6 {
 					p = 7
-				} else if p < 5 {
-					p = 5
 				}
+			} else if p < 5 {
+				p = 5
 			}
 		} else {
 			if newcls {
 				if p > 5 {
 					p = 5
-				} else if p > 4 {
-					p = 4
 				}
+			} else if p > 4 {
+				p = 4
 			}
 		}
 	}
