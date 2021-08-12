@@ -126,11 +126,10 @@ func getkeys(m map[string]uint32) []string {
 	return keys
 }
 
-func getfirst(key string, q url.Values) string {
-	keys, ok := q[key]
+func getfirst(key string, q *url.Values) string {
+	keys, ok := (*q)[key]
 	if ok {
 		return keys[0]
 	}
-
 	return ""
 }

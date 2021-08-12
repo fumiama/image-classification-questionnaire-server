@@ -506,11 +506,11 @@ func dice(resp http.ResponseWriter, req *http.Request) {
 	// 检查url
 	q := req.URL.Query()
 	log.Infoln("[/dice] query:", q, ".")
-	link = getfirst("url", q)
-	loli = getfirst("loli", q) == "ture"
-	noimg = getfirst("noimg", q) == "ture"
-	r18 = getfirst("r18", q) == "ture"
-	clsnum := getfirst("class", q)
+	link = getfirst("url", &q)
+	loli = getfirst("loli", &q) == "ture"
+	noimg = getfirst("noimg", &q) == "ture"
+	r18 = getfirst("r18", &q) == "ture"
+	clsnum := getfirst("class", &q)
 	newcls = clsnum == "9"
 	nopredict = clsnum == "0"
 	c, dh, f := predicturl(link, loli, newcls, r18, nopredict)
