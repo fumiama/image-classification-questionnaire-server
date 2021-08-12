@@ -80,11 +80,13 @@ func getloliurl(hasr18 bool) (string, bool) {
 }
 
 // predicturl return class data dhash fullpath
-func predicturl(url string, loli bool, newcls bool, hasr18 bool, nopredict bool) (int, string, string) {
+func predicturl(link string, loli bool, newcls bool, hasr18 bool, nopredict bool) (int, string, string) {
 	var r18 bool
+	var url string
 	if loli {
 		url, r18 = getloliurl(hasr18)
 	} else {
+		url = link
 		r18 = false
 	}
 	var resp *http.Response

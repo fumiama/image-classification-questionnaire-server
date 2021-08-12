@@ -526,7 +526,7 @@ func dice(resp http.ResponseWriter, req *http.Request) {
 		}
 	} else {
 		http.Error(resp, "500 Internal Server Error", http.StatusInternalServerError)
-		log.Errorln("[/dice] predict", link, "error:", c, ".")
+		log.Errorln("[/dice] predict error:", c, ".")
 	}
 }
 
