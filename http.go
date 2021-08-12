@@ -128,7 +128,6 @@ func getkeys(m map[string]uint32) []string {
 
 func getfirst(key string, q url.Values) string {
 	keys, ok := q[key]
-	log.Infoln("[getfirst]", keys[0], "ok:", ok, ".")
 	if ok {
 		return keys[0]
 	}

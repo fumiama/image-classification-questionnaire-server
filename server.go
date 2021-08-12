@@ -505,6 +505,7 @@ func dice(resp http.ResponseWriter, req *http.Request) {
 	var link string
 	// 检查url
 	q := req.URL.Query()
+	log.Infoln("[/dice] query:", q, ".")
 	link = getfirst("url", q)
 	loli = getfirst("loli", q) == "ture"
 	noimg = getfirst("noimg", q) == "ture"
