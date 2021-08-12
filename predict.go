@@ -131,8 +131,10 @@ func predicturl(url string, loli bool, newcls bool, hasr18 bool, nopredict bool)
 			logrus.Infoln("[predicturl] nor:", n, ".")
 			if n > 4 && p > 5 {
 				p = n + p - 4
-			} else if n > 2 && p > 1 {
-				p = n + p - 3
+			} else if n > 3 && p > 1 {
+				p = n
+			} else if n == 0 && p > 0 {
+				p -= 1
 			}
 			if p > 8 {
 				p = 8
