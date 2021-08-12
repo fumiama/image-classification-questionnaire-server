@@ -129,7 +129,9 @@ func predicturl(url string, loli bool, newcls bool, hasr18 bool, nopredict bool)
 		if newcls {
 			n := gsc.PredictFile(filefullpath, norindex)
 			logrus.Infoln("[predicturl] nor:", n, ".")
-			p = (n + p*4) / 4
+			if n > 4 && p > 2 {
+				p = n + p - 6
+			}
 		}
 	}
 	logrus.Infoln("[predicturl] loli mae:", p, ".")
