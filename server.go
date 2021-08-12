@@ -507,9 +507,9 @@ func dice(resp http.ResponseWriter, req *http.Request) {
 	q := req.URL.Query()
 	log.Infoln("[/dice] query:", q, ".")
 	link = getfirst("url", &q)
-	loli = getfirst("loli", &q) == "ture"
-	noimg = getfirst("noimg", &q) == "ture"
-	r18 = getfirst("r18", &q) == "ture"
+	loli = getfirst("loli", &q) == "true"
+	noimg = getfirst("noimg", &q) == "true"
+	r18 = getfirst("r18", &q) == "true"
 	clsnum := getfirst("class", &q)
 	newcls = clsnum == "9"
 	nopredict = clsnum == "0"
