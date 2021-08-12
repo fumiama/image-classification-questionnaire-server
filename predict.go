@@ -100,11 +100,13 @@ func predicturl(url string, loli bool, newcls bool, hasr18 bool, nopredict bool)
 		resp, err = http.Get(url)
 	}
 	if err != nil {
+		logrus.Errorln("[predicturl] get url error:", err, ".")
 		return -1, "", ""
 	}
 	defer resp.Body.Close()
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
+		logrus.Errorln("[predicturl] read body error:", err, ".")
 		return -2, "", ""
 	}
 	var imagetarget string
@@ -115,6 +117,7 @@ func predicturl(url string, loli bool, newcls bool, hasr18 bool, nopredict bool)
 	}
 	_, dh := imago.Saveimgbytes(data, imagetarget, true, 0)
 	if dh == "" {
+		logrus.Errorln("[predicturl] get dhash error:", err, ".")
 		return -3, dh, ""
 	}
 	var p int
