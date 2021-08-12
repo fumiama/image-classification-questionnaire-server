@@ -9,6 +9,7 @@ import (
 	_ "image/jpeg"
 	_ "image/png"
 	"io"
+	"net/url"
 	"os"
 	"time"
 	"unsafe"
@@ -123,4 +124,12 @@ func getkeys(m map[string]uint32) []string {
 		keys = append(keys, k)
 	}
 	return keys
+}
+
+func getfirst(key string, q url.Values) string {
+	keys, ok := q[key]
+	if ok {
+		return keys[0]
+	}
+	return ""
 }

@@ -242,6 +242,7 @@ var (
 	pwd         int
 	conf        configo.Data
 	imgdir      string
+	custimgdir  string
 	configfile  string
 	confchanged = false
 	defuploader = url.QueryEscape("涩酱")
@@ -494,6 +495,40 @@ func pickdl(resp http.ResponseWriter, req *http.Request) {
 	pickof(resp, req, true)
 }
 
+func dice(resp http.ResponseWriter, req *http.Request) {
+	// 检查是否GET请求
+	if req.Method != "GET" {
+		http.Error(resp, "405 Method Not Allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	var loli, noimg, newcls, r18, nopredict bool
+	var link string
+	// 检查url
+	q := req.URL.Query()
+	link = getfirst("url", q)
+	loli = getfirst("loli", q) == "ture"
+	noimg = getfirst("noimg", q) == "ture"
+	r18 = getfirst("r18", q) == "ture"
+	clsnum := getfirst("class", q)
+	newcls = clsnum == "9"
+	nopredict = clsnum == "0"
+	c, dh, f := predicturl(link, loli, newcls, r18, nopredict)
+	if c >= 0 {
+		class := strconv.Itoa(c)
+		edh := url.QueryEscape(dh)
+		if noimg {
+			io.WriteString(resp, "{\"img\": \""+edh+"\", \"class\": \""+class+"\"}")
+		} else {
+			resp.Header().Add("Class", class)
+			resp.Header().Add("DHash", edh)
+			http.ServeFile(resp, req, f)
+		}
+	} else {
+		http.Error(resp, "500 Internal Server Error", http.StatusInternalServerError)
+		log.Errorln("[/dice] predict", link, "error:", c, ".")
+	}
+}
+
 func init() {
 	log.SetFormatter(&easy.Formatter{
 		TimestampFormat: "2006-01-02 15:04:05",
@@ -504,9 +539,10 @@ func init() {
 
 func main() {
 	arglen := len(os.Args)
-	if arglen == 5 || arglen == 6 {
+	if arglen == 6 || arglen == 7 {
 		configfile = os.Args[2]
 		imgdir = os.Args[3]
+		custimgdir = os.Args[4]
 		err := loadconf(configfile)
 		if err != nil {
 			panic(err)
@@ -515,21 +551,24 @@ func main() {
 		if imgdir[len(imgdir)-1] != '/' {
 			imgdir += "/"
 		}
+		if custimgdir[len(custimgdir)-1] != '/' {
+			custimgdir += "/"
+		}
 		err = imago.Scanimgs(imgdir)
 		if err != nil {
 			panic(err)
 		}
-		pwd, _ = u82int(os.Args[4])
-		pwdstr := (*[2]uintptr)(unsafe.Pointer(&os.Args[4]))
-		for i := 0; i < len(os.Args[4]); i++ {
+		pwd, _ = u82int(os.Args[5])
+		pwdstr := (*[2]uintptr)(unsafe.Pointer(&os.Args[5]))
+		for i := 0; i < len(os.Args[5]); i++ {
 			*(*uint8)(unsafe.Pointer((*pwdstr)[0] + uintptr(i))) = '*'
 		}
 		listener, err := net.Listen("tcp", os.Args[1])
 		if err != nil {
 			panic(err)
 		} else {
-			if arglen == 6 {
-				uid, err1 := strconv.Atoi(os.Args[5])
+			if arglen == 7 {
+				uid, err1 := strconv.Atoi(os.Args[6])
 				if err == nil {
 					syscall.Setuid(uid)
 					syscall.Setgid(uid)
@@ -546,10 +585,11 @@ func main() {
 			http.HandleFunc("/vote", vote)
 			http.HandleFunc("/pick", pick)
 			http.HandleFunc("/pickdl", pickdl)
+			http.HandleFunc("/dice", dice)
 			// http.Handle("/yuka/", http.StripPrefix("/yuka/", http.FileServer(http.Dir(imgdir))))
 			log.Fatal(http.Serve(listener, nil))
 		}
 	} else {
-		fmt.Println("Usage: <listen_addr> <configfile> <imgdir> <password> (userid)")
+		fmt.Println("Usage: <listen_addr> <configfile> <imgdir> <custimgdir> <password> (userid)")
 	}
 }

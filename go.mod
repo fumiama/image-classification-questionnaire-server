@@ -4,6 +4,7 @@ go 1.16
 
 require (
 	github.com/fumiama/go-base16384 v1.1.0
+	github.com/fumiama/go-setu-class v1.0.0
 	github.com/fumiama/imago v1.0.7
 	github.com/golang/protobuf v1.5.2
 	github.com/sirupsen/logrus v1.8.1
