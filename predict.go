@@ -135,7 +135,7 @@ func predicturl(url string, loli bool, newcls bool, hasr18 bool, nopredict bool)
 				p = n + p - 4
 			} else if n > 3 && p > 1 {
 				p = n
-			} else if n == 0 && p > 0 && p < 6 {
+			} else if n == 0 && p > 0 && p < 3 {
 				p -= 1
 			}
 			if p > 8 {
