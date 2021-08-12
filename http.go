@@ -129,7 +129,9 @@ func getkeys(m map[string]uint32) []string {
 func getfirst(key string, q *url.Values) string {
 	keys, ok := (*q)[key]
 	if ok {
+		log.Infoln("[getfirst] get query", key, "=", keys[0], ".")
 		return keys[0]
 	}
+	log.Infoln("[getfirst]", key, "has no query.")
 	return ""
 }
