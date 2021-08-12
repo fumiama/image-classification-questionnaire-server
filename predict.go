@@ -129,11 +129,10 @@ func predicturl(url string, loli bool, newcls bool, hasr18 bool, nopredict bool)
 		if newcls {
 			n := gsc.PredictFile(filefullpath, norindex)
 			logrus.Infoln("[predicturl] nor:", n, ".")
-			if n > 2 && p > 1 {
-				p = n + p - 5
-			}
-			if p > 8 {
-				p = 8
+			if n > 4 && p > 5 {
+				p = n + p - 6
+			} else if n > 2 && p > 1 {
+				p = n + p - 3
 			}
 		}
 	}
