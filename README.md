@@ -1,6 +1,10 @@
-# 图像分类问卷调查服务器
+<div align="center">
+  <img src=".github/ichiko.jpg" width = "360" height = "360" alt="Ichiko"><br>
+  <h1>图像分类问卷调查服务器(ICQS)</h1>
+  基于go/python的图像分类调查服务器<br><br>
+</div>
 
-一个基于go/python的图像分类调查服务器，用户可以利用api自己上传图像并指定分类，也可以从服务器的图像中查看图片，并指定分类。
+> 用户可以利用api自己上传图像并指定分类，也可以从服务器的图像中查看图片，并指定分类。
 
 <div align=center> <a href="#"> <img src="http://sayuri.fumiama.top/cmoe?name=icqs&theme=gb" /> </a> </div>
 
