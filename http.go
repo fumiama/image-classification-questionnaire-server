@@ -79,7 +79,7 @@ func flushconf() {
 			}
 			confchanged = false
 		} else {
-			log.Println("[saveconf] vote not change.")
+			log.Debugln("[saveconf] vote not change.")
 		}
 	}
 }
