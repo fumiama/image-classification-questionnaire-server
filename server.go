@@ -358,6 +358,7 @@ func upload(resp http.ResponseWriter, req *http.Request) {
 				log.Errorf("[/upload] receive body error: %v", err)
 			}
 			result = append(result, ']')
+			log.Infof("[/upload] save image %v.", result)
 			io.WriteString(resp, "{\"stat\": \"success\", \"result\": "+imago.Bytes2str(result)+"}")
 		}
 	} else {
@@ -397,6 +398,7 @@ func upform(resp http.ResponseWriter, req *http.Request) {
 				} else {
 					log.Errorf("[/upform] save %v error.", f.Filename)
 				}
+				log.Infof("[/upform] save image %v.", result)
 			}
 			result = append(result[:len(result)-2], ']')
 			io.WriteString(resp, "{\"stat\": \"success\", \"result\": "+imago.Bytes2str(result)+"}")
