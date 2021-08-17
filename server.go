@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"runtime"
 	"strconv"
 	"syscall"
 	"time"
@@ -354,11 +355,11 @@ func upload(resp http.ResponseWriter, req *http.Request) {
 				result = append(result, '}')
 				conf.Upload[dh] = uid[0]
 				confchanged = true
+				log.Infof("[/upload] user %v save image %v.", uid[0], dh)
 			} else {
 				log.Errorf("[/upload] receive body error: %v", err)
 			}
 			result = append(result, ']')
-			log.Infof("[/upload] save image %v.", result)
 			io.WriteString(resp, "{\"stat\": \"success\", \"result\": "+imago.Bytes2str(result)+"}")
 		}
 	} else {
@@ -395,10 +396,10 @@ func upform(resp http.ResponseWriter, req *http.Request) {
 					result = append(result, tail...)
 					conf.Upload[dh] = uid[0]
 					confchanged = true
+					log.Infof("[/upform] user %v save image %v.", uid[0], dh)
 				} else {
 					log.Errorf("[/upform] save %v error.", f.Filename)
 				}
-				log.Infof("[/upform] save image %v.", result)
 			}
 			result = append(result[:len(result)-2], ']')
 			io.WriteString(resp, "{\"stat\": \"success\", \"result\": "+imago.Bytes2str(result)+"}")
@@ -571,12 +572,15 @@ func main() {
 			panic(err)
 		} else {
 			if arglen == 7 {
-				uid, err1 := strconv.Atoi(os.Args[6])
-				if err == nil {
-					syscall.Setuid(uid)
-					syscall.Setgid(uid)
-				} else {
-					panic(err1)
+				systype := runtime.GOOS
+				if systype != "windows" {
+					uid, err1 := strconv.Atoi(os.Args[6])
+					if err == nil {
+						syscall.Setuid(uid)
+						syscall.Setgid(uid)
+					} else {
+						panic(err1)
+					}
 				}
 			}
 			http.HandleFunc("/", index)
