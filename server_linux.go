@@ -1,4 +1,4 @@
-// +build windows
+// +build !windows
 
 package main
 
@@ -7,6 +7,8 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"strconv"
+	"syscall"
 	"unsafe"
 
 	"github.com/fumiama/imago"
@@ -15,7 +17,7 @@ import (
 
 func main() {
 	arglen := len(os.Args)
-	if arglen == 6 {
+	if arglen == 6 || arglen == 7 {
 		configfile = os.Args[2]
 		imgdir = os.Args[3]
 		custimgdir = os.Args[4]
@@ -43,6 +45,15 @@ func main() {
 		if err != nil {
 			panic(err)
 		} else {
+			if arglen == 7 {
+				uid, err1 := strconv.Atoi(os.Args[6])
+				if err == nil {
+					syscall.Setuid(uid)
+					syscall.Setgid(uid)
+				} else {
+					panic(err1)
+				}
+			}
 			http.HandleFunc("/", index)
 			http.HandleFunc("/index.html", index)
 			http.HandleFunc("/signup", signup)
@@ -57,6 +68,6 @@ func main() {
 			log.Fatal(http.Serve(listener, nil))
 		}
 	} else {
-		fmt.Println("Usage: <listen_addr> <configfile> <imgdir> <custimgdir> <password>")
+		fmt.Println("Usage: <listen_addr> <configfile> <imgdir> <custimgdir> <password> (userid)")
 	}
 }
