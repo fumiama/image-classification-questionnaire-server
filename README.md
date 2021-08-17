@@ -51,6 +51,7 @@ Usage: <listen_addr> <configfile> <imgdir> <custimgdir> <password> (userid) &
 注意：
 1. 如果添加末尾的`&`，程序将会以`daemon`运行。
 2. `userid`为可选项。如果设置，程序将会在绑定端口后切换到该`uid`处理请求。
+3. `Windows`下使用不支持`userid`选项。
 #### 2. 编译
 - 如果使用`gc`，添加`-ldflags "-s -w"`编译即可。
 - 如果使用`gccgo`，推荐使用如下优化参数以达到最佳效果。
