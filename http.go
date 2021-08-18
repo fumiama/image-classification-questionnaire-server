@@ -9,6 +9,7 @@ import (
 	_ "image/jpeg"
 	_ "image/png"
 	"io"
+	"net/http"
 	"net/url"
 	"os"
 	"time"
@@ -134,4 +135,21 @@ func getfirst(key string, q *url.Values) string {
 	}
 	log.Debugln("[getfirst]", key, "has no query.")
 	return ""
+}
+
+func getIP(r *http.Request) string {
+	forwarded := r.Header.Get("X-FORWARDED-FOR")
+	if forwarded != "" {
+		return forwarded
+	}
+	return r.RemoteAddr
+}
+
+func methodis(m string, resp http.ResponseWriter, req *http.Request) bool {
+	log.Infof("[methodis] %v from %v.", req.Method, getIP(req))
+	if req.Method != m {
+		http.Error(resp, "405 Method Not Allowed", http.StatusMethodNotAllowed)
+		return false
+	}
+	return true
 }

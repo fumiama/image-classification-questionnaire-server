@@ -245,41 +245,41 @@ var (
 )
 
 func index(resp http.ResponseWriter, req *http.Request) {
-	io.WriteString(resp, indexdata)
+	if methodis("GET", resp, req) {
+		io.WriteString(resp, indexdata)
+	}
 }
 
 func signup(resp http.ResponseWriter, req *http.Request) {
 	// 检查是否GET请求
-	if req.Method != "GET" {
-		http.Error(resp, "405 Method Not Allowed", http.StatusMethodNotAllowed)
-		return
-	}
-	q := req.URL.Query()
-	key, ok := q["key"]
-	if !ok {
-		http.Error(resp, "400 BAD REQUEST\nInvalid key.", http.StatusBadRequest)
-		log.Errorln("[/signup] invalid key.")
-	} else {
-		keyint, err := strconv.Atoi(key[0])
-		if !ok || err != nil {
-			http.Error(resp, "400 BAD REQUEST", http.StatusBadRequest)
-			log.Errorln("[/signup] bad request.")
+	if methodis("GET", resp, req) {
+		q := req.URL.Query()
+		key, ok := q["key"]
+		if !ok {
+			http.Error(resp, "400 BAD REQUEST\nInvalid key.", http.StatusBadRequest)
+			log.Errorln("[/signup] invalid key.")
 		} else {
-			diff := int(time.Now().Unix()) - (keyint ^ pwd)
-			if diff < 10 && diff >= 0 {
-				uuid := getuuid()
-				for conf.Users[uuid] != nil {
-					uuid = getuuid()
-				}
-				conf.Users[uuid] = new(configo.DataVote)
-				conf.Users[uuid].Data = make(map[string]uint32)
-				log.Println("[/signup] create new map.")
-				log.Printf("[/signup] create user: %s.", uuid)
-				fmt.Fprintf(resp, "{\"stat\": \"success\", \"id\": \"%s\"}", url.QueryEscape((uuid)))
-				confchanged = true
+			keyint, err := strconv.Atoi(key[0])
+			if !ok || err != nil {
+				http.Error(resp, "400 BAD REQUEST", http.StatusBadRequest)
+				log.Errorln("[/signup] bad request.")
 			} else {
-				io.WriteString(resp, "{\"stat\": \"wrong\", \"id\": \"null\"}")
-				log.Errorln("[/signup] auth failed.")
+				diff := int(time.Now().Unix()) - (keyint ^ pwd)
+				if diff < 10 && diff >= 0 {
+					uuid := getuuid()
+					for conf.Users[uuid] != nil {
+						uuid = getuuid()
+					}
+					conf.Users[uuid] = new(configo.DataVote)
+					conf.Users[uuid].Data = make(map[string]uint32)
+					log.Println("[/signup] create new map.")
+					log.Printf("[/signup] create user: %s.", uuid)
+					fmt.Fprintf(resp, "{\"stat\": \"success\", \"id\": \"%s\"}", url.QueryEscape((uuid)))
+					confchanged = true
+				} else {
+					io.WriteString(resp, "{\"stat\": \"wrong\", \"id\": \"null\"}")
+					log.Errorln("[/signup] auth failed.")
+				}
 			}
 		}
 	}
@@ -287,201 +287,189 @@ func signup(resp http.ResponseWriter, req *http.Request) {
 
 func img(resp http.ResponseWriter, req *http.Request) {
 	// 检查是否GET请求
-	if req.Method != "GET" {
-		http.Error(resp, "405 Method Not Allowed", http.StatusMethodNotAllowed)
-		return
-	}
-	q := req.URL.Query()
-	path, ok := q["path"]
-	if !ok {
-		http.Error(resp, "400 BAD REQUEST", http.StatusBadRequest)
-		log.Errorln("[/img] bad request.")
-	} else {
-		if len([]rune(path[0])) == 5 {
-			imgpath := imgdir + path[0] + ".webp"
-			if imago.Imgexsits(path[0]) {
-				http.ServeFile(resp, req, imgpath)
-				log.Printf("[/img] serve %s.", path[0])
+	if methodis("GET", resp, req) {
+		q := req.URL.Query()
+		path, ok := q["path"]
+		if !ok {
+			http.Error(resp, "400 BAD REQUEST", http.StatusBadRequest)
+			log.Errorln("[/img] bad request.")
+		} else {
+			if len([]rune(path[0])) == 5 {
+				imgpath := imgdir + path[0] + ".webp"
+				if imago.Imgexsits(path[0]) {
+					http.ServeFile(resp, req, imgpath)
+					log.Printf("[/img] serve %s.", path[0])
+				} else {
+					resp.WriteHeader(404)
+					io.WriteString(resp, "{\"stat\": \"nosuchimg\"}")
+					log.Errorf("[/img] %s not found.", path[0])
+				}
 			} else {
 				resp.WriteHeader(404)
-				io.WriteString(resp, "{\"stat\": \"nosuchimg\"}")
-				log.Errorf("[/img] %s not found.", path[0])
+				io.WriteString(resp, "{\"stat\": \"invimg\"}")
+				log.Errorf("[/img] invalid image path %s.", path[0])
 			}
-		} else {
-			resp.WriteHeader(404)
-			io.WriteString(resp, "{\"stat\": \"invimg\"}")
-			log.Errorf("[/img] invalid image path %s.", path[0])
 		}
 	}
 }
 
 func upload(resp http.ResponseWriter, req *http.Request) {
 	// 检查是否POST请求
-	if req.Method != "POST" {
-		http.Error(resp, "405 Method Not Allowed", http.StatusMethodNotAllowed)
-		return
-	}
-	// 检查uid
-	q := req.URL.Query()
-	uid, ok := q["uuid"]
-	if !ok {
-		http.Error(resp, "400 BAD REQUEST", http.StatusBadRequest)
-		log.Errorln("[/upload] bad request.")
-	} else if len([]rune(uid[0])) == 2 && userexists(uid[0]) {
-		if req.ContentLength <= 0 {
-			io.WriteString(resp, "{\"stat\": \"emptybody\"}")
-			log.Errorln("[/upload] invalid content length.")
-		} else {
-			buf := make([]byte, req.ContentLength)
-			result := make([]byte, 1, 1024)
-			result[0] = '['
-			cnt := 0
-			var err error
-			cl := int(req.ContentLength)
-			for n := 0; err == nil && cnt < cl; {
-				n, err = req.Body.Read(buf[cnt:])
-				cnt += n
-			}
-			log.Printf("[/upload] receive %v/%v bytes.", cnt, req.ContentLength)
-			if err == nil || cnt == cl {
-				ret, dh := imago.Saveimgbytes(buf, imgdir, false, 3)
-				result = append(result, '{')
-				result = append(result, imago.Str2bytes(ret)...)
-				result = append(result, '}')
-				conf.Upload[dh] = uid[0]
-				confchanged = true
-				log.Infof("[/upload] user %v save image %v.", uid[0], dh)
+	if methodis("POST", resp, req) {
+		// 检查uid
+		q := req.URL.Query()
+		uid, ok := q["uuid"]
+		if !ok {
+			http.Error(resp, "400 BAD REQUEST", http.StatusBadRequest)
+			log.Errorln("[/upload] bad request.")
+		} else if len([]rune(uid[0])) == 2 && userexists(uid[0]) {
+			if req.ContentLength <= 0 {
+				io.WriteString(resp, "{\"stat\": \"emptybody\"}")
+				log.Errorln("[/upload] invalid content length.")
 			} else {
-				log.Errorf("[/upload] receive body error: %v", err)
+				buf := make([]byte, req.ContentLength)
+				result := make([]byte, 1, 1024)
+				result[0] = '['
+				cnt := 0
+				var err error
+				cl := int(req.ContentLength)
+				for n := 0; err == nil && cnt < cl; {
+					n, err = req.Body.Read(buf[cnt:])
+					cnt += n
+				}
+				log.Printf("[/upload] receive %v/%v bytes.", cnt, req.ContentLength)
+				if err == nil || cnt == cl {
+					ret, dh := imago.Saveimgbytes(buf, imgdir, false, 3)
+					result = append(result, '{')
+					result = append(result, imago.Str2bytes(ret)...)
+					result = append(result, '}')
+					conf.Upload[dh] = uid[0]
+					confchanged = true
+					log.Infof("[/upload] user %v save image %v.", uid[0], dh)
+				} else {
+					log.Errorf("[/upload] receive body error: %v", err)
+				}
+				result = append(result, ']')
+				io.WriteString(resp, "{\"stat\": \"success\", \"result\": "+imago.Bytes2str(result)+"}")
 			}
-			result = append(result, ']')
-			io.WriteString(resp, "{\"stat\": \"success\", \"result\": "+imago.Bytes2str(result)+"}")
+		} else {
+			io.WriteString(resp, "{\"stat\": \"noid\"}")
+			log.Errorln("[/upload] no such user.")
 		}
-	} else {
-		io.WriteString(resp, "{\"stat\": \"noid\"}")
-		log.Errorln("[/upload] no such user.")
 	}
 }
 
 func upform(resp http.ResponseWriter, req *http.Request) {
 	// 检查是否POST请求
-	if req.Method != "POST" {
-		http.Error(resp, "405 Method Not Allowed", http.StatusMethodNotAllowed)
-		return
-	}
-	// 检查uid
-	q := req.URL.Query()
-	uid, ok := q["uuid"]
-	if !ok {
-		http.Error(resp, "400 BAD REQUEST", http.StatusBadRequest)
-		log.Errorln("[/upload] bad request.")
-	} else if len([]rune(uid[0])) == 2 && userexists(uid[0]) {
-		err := req.ParseMultipartForm(64 * 1024 * 1024)
-		if err == nil {
-			result := make([]byte, 1, 1024)
-			result[0] = '['
-			tail := imago.Str2bytes("}, ")
-			for _, f := range req.MultipartForm.File["img"] {
-				log.Printf("[/upform] receive %v of %v bytes.", f.Filename, f.Size)
-				fo, err := f.Open()
-				if err == nil {
-					ret, dh := imago.Saveimg(fo, imgdir, 3)
-					result = append(result, '{')
-					result = append(result, imago.Str2bytes(ret)...)
-					result = append(result, tail...)
-					conf.Upload[dh] = uid[0]
-					confchanged = true
-					log.Infof("[/upform] user %v save image %v.", uid[0], dh)
-				} else {
-					log.Errorf("[/upform] save %v error.", f.Filename)
+	if methodis("POST", resp, req) {
+		// 检查uid
+		q := req.URL.Query()
+		uid, ok := q["uuid"]
+		if !ok {
+			http.Error(resp, "400 BAD REQUEST", http.StatusBadRequest)
+			log.Errorln("[/upload] bad request.")
+		} else if len([]rune(uid[0])) == 2 && userexists(uid[0]) {
+			err := req.ParseMultipartForm(64 * 1024 * 1024)
+			if err == nil {
+				result := make([]byte, 1, 1024)
+				result[0] = '['
+				tail := imago.Str2bytes("}, ")
+				for _, f := range req.MultipartForm.File["img"] {
+					log.Printf("[/upform] receive %v of %v bytes.", f.Filename, f.Size)
+					fo, err := f.Open()
+					if err == nil {
+						ret, dh := imago.Saveimg(fo, imgdir, 3)
+						result = append(result, '{')
+						result = append(result, imago.Str2bytes(ret)...)
+						result = append(result, tail...)
+						conf.Upload[dh] = uid[0]
+						confchanged = true
+						log.Infof("[/upform] user %v save image %v.", uid[0], dh)
+					} else {
+						log.Errorf("[/upform] save %v error.", f.Filename)
+					}
 				}
+				result = append(result[:len(result)-2], ']')
+				io.WriteString(resp, "{\"stat\": \"success\", \"result\": "+imago.Bytes2str(result)+"}")
+			} else {
+				io.WriteString(resp, "{\"stat\": \"ioerr\"}")
+				log.Errorln("[/upform] parse multipart form error.")
 			}
-			result = append(result[:len(result)-2], ']')
-			io.WriteString(resp, "{\"stat\": \"success\", \"result\": "+imago.Bytes2str(result)+"}")
 		} else {
-			io.WriteString(resp, "{\"stat\": \"ioerr\"}")
-			log.Errorln("[/upform] parse multipart form error.")
+			io.WriteString(resp, "{\"stat\": \"noid\"}")
+			log.Errorln("[/upform] no such user.")
 		}
-	} else {
-		io.WriteString(resp, "{\"stat\": \"noid\"}")
-		log.Errorln("[/upform] no such user.")
 	}
 }
 
 func vote(resp http.ResponseWriter, req *http.Request) {
-	// 检查是否GET请求
-	if req.Method != "GET" {
-		http.Error(resp, "405 Method Not Allowed", http.StatusMethodNotAllowed)
-		return
-	}
-	q := req.URL.Query()
-	uid, ok := q["uuid"]
-	img, ok1 := q["img"]
-	cls, ok2 := q["class"]
-	if !ok || !ok1 || !ok2 {
-		http.Error(resp, "400 BAD REQUEST", http.StatusBadRequest)
-		log.Errorln("[/vote] bad request.")
-	} else if len([]rune(uid[0])) == 2 && userexists(uid[0]) {
-		if len([]rune(img[0])) == 5 && imago.Imgexsits(img[0]) {
-			class, err := strconv.Atoi(cls[0])
-			if err == nil && class >= 0 && class <= 7 {
-				log.Printf("[/vote] user %s voted %d for %s.", uid[0], class, img[0])
-				if conf.Users[uid[0]].Data == nil {
-					conf.Users[uid[0]].Data = make(map[string]uint32)
+	if methodis("GET", resp, req) {
+		q := req.URL.Query()
+		uid, ok := q["uuid"]
+		img, ok1 := q["img"]
+		cls, ok2 := q["class"]
+		if !ok || !ok1 || !ok2 {
+			http.Error(resp, "400 BAD REQUEST", http.StatusBadRequest)
+			log.Errorln("[/vote] bad request.")
+		} else if len([]rune(uid[0])) == 2 && userexists(uid[0]) {
+			if len([]rune(img[0])) == 5 && imago.Imgexsits(img[0]) {
+				class, err := strconv.Atoi(cls[0])
+				if err == nil && class >= 0 && class <= 7 {
+					log.Printf("[/vote] user %s voted %d for %s.", uid[0], class, img[0])
+					if conf.Users[uid[0]].Data == nil {
+						conf.Users[uid[0]].Data = make(map[string]uint32)
+					}
+					conf.Users[uid[0]].Data[img[0]] = uint32(class)
+					io.WriteString(resp, "{\"stat\": \"success\"}")
+					log.Println("[/vote] success.")
+					confchanged = true
+				} else {
+					io.WriteString(resp, "{\"stat\": \"invclass\"}")
+					log.Errorln("[/vote] invalid class", class, ".")
 				}
-				conf.Users[uid[0]].Data[img[0]] = uint32(class)
-				io.WriteString(resp, "{\"stat\": \"success\"}")
-				log.Println("[/vote] success.")
-				confchanged = true
 			} else {
-				io.WriteString(resp, "{\"stat\": \"invclass\"}")
-				log.Errorln("[/vote] invalid class", class, ".")
+				io.WriteString(resp, "{\"stat\": \"invimg\"}")
+				log.Errorln("[/vote] invalid image", img[0], ".")
 			}
 		} else {
-			io.WriteString(resp, "{\"stat\": \"invimg\"}")
-			log.Errorln("[/vote] invalid image", img[0], ".")
+			io.WriteString(resp, "{\"stat\": \"invid\"}")
+			log.Errorln("[/vote] invalid uid", uid[0], ".")
 		}
-	} else {
-		io.WriteString(resp, "{\"stat\": \"invid\"}")
-		log.Errorln("[/vote] invalid uid", uid[0], ".")
 	}
 }
 
 func pickof(resp http.ResponseWriter, req *http.Request, isdl bool) {
-	// 检查是否GET请求
-	if req.Method != "GET" {
-		http.Error(resp, "405 Method Not Allowed", http.StatusMethodNotAllowed)
-		return
-	}
-	// 检查uid
-	q := req.URL.Query()
-	uid, ok := q["uuid"]
-	if !ok {
-		http.Error(resp, "400 BAD REQUEST", http.StatusBadRequest)
-		log.Errorln("[pickof] bad request.")
-	} else if len([]rune(uid[0])) == 2 && userexists(uid[0]) {
-		exclude := getkeys(conf.Users[uid[0]].Data)
-		name := imago.Pick(exclude)
-		if name == "" {
-			io.WriteString(resp, "{\"stat\": \"nomoreimg\"}")
-			log.Errorln("[pickof] no more image.")
-		} else if isdl {
-			imgpath := imgdir + name + ".webp"
-			http.ServeFile(resp, req, imgpath)
-			log.Println("[/pickdl]", name, ".")
-		} else {
-			uploader, ok := conf.Upload[name]
-			if !ok {
-				uploader = defuploader
+	if methodis("GET", resp, req) {
+		// 检查uid
+		q := req.URL.Query()
+		uid, ok := q["uuid"]
+		if !ok {
+			http.Error(resp, "400 BAD REQUEST", http.StatusBadRequest)
+			log.Errorln("[pickof] bad request.")
+		} else if len([]rune(uid[0])) == 2 && userexists(uid[0]) {
+			exclude := getkeys(conf.Users[uid[0]].Data)
+			name := imago.Pick(exclude)
+			if name == "" {
+				io.WriteString(resp, "{\"stat\": \"nomoreimg\"}")
+				log.Errorln("[pickof] no more image.")
+			} else if isdl {
+				imgpath := imgdir + name + ".webp"
+				http.ServeFile(resp, req, imgpath)
+				log.Println("[/pickdl]", name, ".")
 			} else {
-				uploader = url.QueryEscape(uploader)
+				uploader, ok := conf.Upload[name]
+				if !ok {
+					uploader = defuploader
+				} else {
+					uploader = url.QueryEscape(uploader)
+				}
+				io.WriteString(resp, "{\"stat\": \"success\", \"img\": \""+url.QueryEscape(name)+"\", \"uploader\": \""+uploader+"\"}")
+				log.Println("[/pick]", name, ".")
 			}
-			io.WriteString(resp, "{\"stat\": \"success\", \"img\": \""+url.QueryEscape(name)+"\", \"uploader\": \""+uploader+"\"}")
-			log.Println("[/pick]", name, ".")
+		} else {
+			io.WriteString(resp, "{\"stat\": \"noid\"}")
+			log.Errorln("[pickof] no such user.")
 		}
-	} else {
-		io.WriteString(resp, "{\"stat\": \"noid\"}")
-		log.Errorln("[pickof] no such user.")
 	}
 }
 
@@ -495,36 +483,34 @@ func pickdl(resp http.ResponseWriter, req *http.Request) {
 
 func dice(resp http.ResponseWriter, req *http.Request) {
 	// 检查是否GET请求
-	if req.Method != "GET" {
-		http.Error(resp, "405 Method Not Allowed", http.StatusMethodNotAllowed)
-		return
-	}
-	var loli, noimg, newcls, r18, nopredict bool
-	var link string
-	// 检查url
-	q := req.URL.Query()
-	log.Infoln("[/dice] query:", q, ".")
-	link = getfirst("url", &q)
-	loli = getfirst("loli", &q) == "true"
-	noimg = getfirst("noimg", &q) == "true"
-	r18 = getfirst("r18", &q) == "true"
-	clsnum := getfirst("class", &q)
-	newcls = clsnum == "9"
-	nopredict = clsnum == "0"
-	c, dh, f := predicturl(link, loli, newcls, r18, nopredict)
-	if c >= 0 {
-		class := strconv.Itoa(c)
-		edh := url.QueryEscape(dh)
-		if noimg {
-			io.WriteString(resp, "{\"img\": \""+edh+"\", \"class\": \""+class+"\"}")
+	if methodis("GET", resp, req) {
+		var loli, noimg, newcls, r18, nopredict bool
+		var link string
+		// 检查url
+		q := req.URL.Query()
+		log.Infoln("[/dice] query:", q, ".")
+		link = getfirst("url", &q)
+		loli = getfirst("loli", &q) == "true"
+		noimg = getfirst("noimg", &q) == "true"
+		r18 = getfirst("r18", &q) == "true"
+		clsnum := getfirst("class", &q)
+		newcls = clsnum == "9"
+		nopredict = clsnum == "0"
+		c, dh, f := predicturl(link, loli, newcls, r18, nopredict)
+		if c >= 0 {
+			class := strconv.Itoa(c)
+			edh := url.QueryEscape(dh)
+			if noimg {
+				io.WriteString(resp, "{\"img\": \""+edh+"\", \"class\": \""+class+"\"}")
+			} else {
+				resp.Header().Add("Class", class)
+				resp.Header().Add("DHash", edh)
+				http.ServeFile(resp, req, f)
+			}
 		} else {
-			resp.Header().Add("Class", class)
-			resp.Header().Add("DHash", edh)
-			http.ServeFile(resp, req, f)
+			http.Error(resp, "500 Internal Server Error", http.StatusInternalServerError)
+			log.Errorln("[/dice] predict error:", c, ".")
 		}
-	} else {
-		http.Error(resp, "500 Internal Server Error", http.StatusInternalServerError)
-		log.Errorln("[/dice] predict error:", c, ".")
 	}
 }
 
