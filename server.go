@@ -422,7 +422,7 @@ func vote(resp http.ResponseWriter, req *http.Request) {
 		http.Error(resp, "400 BAD REQUEST", http.StatusBadRequest)
 		log.Errorln("[/vote] bad request.")
 	} else if len([]rune(uid[0])) == 2 && userexists(uid[0]) {
-		if len([]rune(img[0])) == 5 {
+		if len([]rune(img[0])) == 5 && imago.Imgexsits(img[0]) {
 			class, err := strconv.Atoi(cls[0])
 			if err == nil && class >= 0 && class <= 7 {
 				log.Printf("[/vote] user %s voted %d for %s.", uid[0], class, img[0])
