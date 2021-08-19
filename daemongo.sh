@@ -2,9 +2,8 @@
 
 while :
 do
-    if [ $(pgrep -f "./server") ];then
-        sleep 10
-    else
+    if ![ $(pgrep -f "./server") ];then
         ~/run_icqs.sh
     fi
+    sleep 10
 done
