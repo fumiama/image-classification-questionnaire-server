@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"runtime"
 	"strconv"
 	"time"
 
@@ -507,6 +508,7 @@ func dice(resp http.ResponseWriter, req *http.Request) {
 				resp.Header().Add("DHash", edh)
 				http.ServeFile(resp, req, f)
 			}
+			runtime.GC()
 		} else {
 			http.Error(resp, "500 Internal Server Error", http.StatusInternalServerError)
 			log.Errorln("[/dice] predict error:", c, ".")
