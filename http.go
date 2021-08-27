@@ -146,7 +146,7 @@ func getIP(r *http.Request) string {
 }
 
 func methodis(m string, resp http.ResponseWriter, req *http.Request) bool {
-	log.Infof("[methodis] %v from %v.", req.Method, getIP(req))
+	log.Debugf("[methodis] %v from %v.", req.Method, getIP(req))
 	if req.Method != m {
 		http.Error(resp, "405 Method Not Allowed", http.StatusMethodNotAllowed)
 		return false
