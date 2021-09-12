@@ -47,7 +47,7 @@ func main() {
 		} else {
 			if arglen == 7 {
 				uid, err1 := strconv.Atoi(os.Args[6])
-				if err == nil {
+				if err1 == nil {
 					syscall.Setuid(uid)
 					syscall.Setgid(uid)
 				} else {
