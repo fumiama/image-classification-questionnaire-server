@@ -130,17 +130,17 @@
 				return 文;
 			}
 			function 六十(六) {
-    			var 长 = 六.length, 串 = new Array(长), 码;
-    			for (var 位 = 0; 位 < 长; 位++) {
-        			码 = 六.charCodeAt(位);
-        			if (48<=码 && 码 < 58) 码 -= 48;
-        			else 码 = (码 & 0xdf) - 65 + 10;
-        			串[位] = 码;
-    			}
-    			return 串.reduce(function(和, 余) {
-        			和 = 16 * 和 + 余;
-        			return 和;
-    			}, 0);
+    			var 长 = 六.length, 串 = new Array(长), 码;
+    			for (var 位 = 0; 位 < 长; 位++) {
+        			码 = 六.charCodeAt(位);
+        			if (48<=码 && 码 < 58) 码 -= 48;
+        			else 码 = (码 & 0xdf) - 65 + 10;
+        			串[位] = 码;
+    			}
+    			return 串.reduce(function(和, 余) {
+        			和 = 16 * 和 + 余;
+        			return 和;
+    			}, 0);
 			}
 			function 注册() {
 				if(我 == "") {

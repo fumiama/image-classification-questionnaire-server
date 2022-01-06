@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
+	"os"
 	"strings"
 
 	gsc "github.com/fumiama/go-setu-class"
@@ -68,7 +69,7 @@ func getloliurl(hasr18 bool) (string, bool) {
 	if err != nil {
 		return "", false
 	}
-	s := imago.Bytes2str(body)
+	s := imago.BytesToString(body)
 	logrus.Println("[getloli] get body.")
 	r := strings.Index(s, "\"r18\":")
 	is18 := s[r+6:r+10] == "true"
@@ -79,8 +80,8 @@ func getloliurl(hasr18 bool) (string, bool) {
 	return s, is18
 }
 
-// predicturl return class data dhash fullpath
-func predicturl(url string, loli bool, newcls bool, hasr18 bool, nopredict bool) (int, string, string) {
+// predicturl return class dhash
+func predicturl(url string, loli bool, newcls bool, hasr18 bool, nopredict bool) (int, string, []byte) {
 	var r18 bool
 	if loli {
 		url, r18 = getloliurl(hasr18)
@@ -101,36 +102,46 @@ func predicturl(url string, loli bool, newcls bool, hasr18 bool, nopredict bool)
 	}
 	if err != nil {
 		logrus.Errorln("[predicturl] get url error:", err, ".")
-		return -1, "", ""
+		return -1, "", nil
 	}
 	defer resp.Body.Close()
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		logrus.Errorln("[predicturl] read body error:", err, ".")
-		return -2, "", ""
+		return -2, "", nil
 	}
 	var imagetarget string
 	if loli {
-		imagetarget = imgdir
+		imagetarget = "img"
 	} else {
-		imagetarget = custimgdir
+		imagetarget = "cust"
 	}
-	_, dh := imago.Saveimgbytes(data, imagetarget, true, 0)
+	_, dh := storage.SaveImgBytes(data, imagetarget, true, 0)
 	if dh == "" {
 		logrus.Errorln("[predicturl] get dhash error:", err, ".")
-		return -3, dh, ""
+		return -3, dh, nil
 	}
 	var p int
-	filefullpath := imagetarget + dh + ".webp"
-	if !exists(filefullpath) {
-		if loli {
-			imagetarget = custimgdir
-		} else {
-			imagetarget = imgdir
+	filefullpath := "cache/" + dh + ".webp"
+	if !exists("cache") {
+		err = os.MkdirAll("cache", 0755)
+		if err != nil {
+			return -4, dh, nil
 		}
-		filefullpath = imagetarget + dh + ".webp"
-		if !exists(filefullpath) {
-			return -4, dh, filefullpath
+	}
+	if !exists(filefullpath) {
+		data, err = storage.GetImgBytes(imagetarget, dh+".webp")
+		if err != nil {
+			return -5, dh, nil
+		}
+		err = os.WriteFile(filefullpath, data, 0644)
+		if err != nil {
+			return -6, dh, data
+		}
+	} else {
+		data, err = os.ReadFile(filefullpath)
+		if err != nil {
+			return -7, dh, nil
 		}
 	}
 	logrus.Infoln("[predicturl] file path:", filefullpath, ".")
@@ -175,5 +186,5 @@ func predicturl(url string, loli bool, newcls bool, hasr18 bool, nopredict bool)
 		}
 	}
 	logrus.Infoln("[predicturl] loli usiro:", p, ".")
-	return p, dh, filefullpath
+	return p, dh, data
 }
