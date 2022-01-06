@@ -330,18 +330,18 @@ func main() {
 		pwd, _ = u82int(os.Args[3])
 		para.Hide(3)
 
-		err := loadconf()
-		if err != nil {
-			panic(err)
-		}
-		go flushconf()
-
 		key := os.Args[4]
 		storage = imago.NewRemoteStorage(apiurl, key)
 		if storage == nil {
 			panic("wrong remote para")
 		}
 		para.Hide(4)
+
+		err := loadconf()
+		if err != nil {
+			panic(err)
+		}
+		go flushconf()
 
 		err = storage.ScanImgs("img")
 		if err != nil {
