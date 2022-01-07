@@ -21,6 +21,8 @@ import (
 	"github.com/fumiama/image-classification-questionnaire-server/configo"
 )
 
+const cachedir = "cache"
+
 //go:embed index_quart.html
 var indexdata string
 
@@ -83,7 +85,11 @@ func img(resp http.ResponseWriter, req *http.Request) {
 			log.Errorln("[/img] bad request.")
 		} else {
 			if len([]rune(path[0])) == 5 {
-				if storage.IsImgExsits(path[0]) {
+				cachefile := cachedir + "/" + path[0] + ".webp"
+				if exists(cachefile) {
+					http.ServeFile(resp, req, cachefile)
+					log.Printf("[/img] serve cached %s.", path[0])
+				} else if storage.IsImgExsits(path[0]) {
 					data, err := storage.GetImgBytes("img", path[0]+".webp")
 					if err != nil {
 						http.Error(resp, "500 Internal Server Error", http.StatusInternalServerError)

@@ -122,9 +122,9 @@ func predicturl(url string, loli bool, newcls bool, hasr18 bool, nopredict bool)
 		return -3, dh, nil
 	}
 	var p int
-	filefullpath := "cache/" + dh + ".webp"
-	if !exists("cache") {
-		err = os.MkdirAll("cache", 0755)
+	filefullpath := cachedir + "/" + dh + ".webp"
+	if !exists(cachedir) {
+		err = os.MkdirAll(cachedir, 0755)
 		if err != nil {
 			return -4, dh, nil
 		}
