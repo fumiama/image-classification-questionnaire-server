@@ -290,6 +290,10 @@ func dice(resp http.ResponseWriter, req *http.Request) {
 	if methodis("GET", resp, req) {
 		var loli, noimg, newcls, r18, nopredict bool
 		var link string
+		if _, err := storage.GetConf(); err != nil {
+			http.Error(resp, "500 Internal Server Error", http.StatusInternalServerError)
+			log.Errorln("[/dice] predict error: can't connect to storage.")
+		}
 		// 检查url
 		q := req.URL.Query()
 		log.Infoln("[/dice] query:", q, ".")
