@@ -121,26 +121,31 @@ func predicturl(url string, loli bool, newcls bool, hasr18 bool, nopredict bool)
 		logrus.Errorln("[predicturl] get dhash error:", err, ".")
 		return -3, dh, nil
 	}
+	logrus.Infoln("[predicturl] get dhash :", dh, ".")
 	var p int
 	filefullpath := cachedir + "/" + dh + ".webp"
 	if !exists(cachedir) {
 		err = os.MkdirAll(cachedir, 0755)
 		if err != nil {
+			logrus.Errorln("[predicturl]", err)
 			return -4, dh, nil
 		}
 	}
 	if !exists(filefullpath) {
 		data, err = storage.GetImgBytes(imagetarget, dh+".webp")
 		if err != nil {
+			logrus.Errorln("[predicturl]", err)
 			return -5, dh, nil
 		}
 		err = os.WriteFile(filefullpath, data, 0644)
 		if err != nil {
+			logrus.Errorln("[predicturl]", err)
 			return -6, dh, data
 		}
 	} else {
 		data, err = os.ReadFile(filefullpath)
 		if err != nil {
+			logrus.Errorln("[predicturl]", err)
 			return -7, dh, nil
 		}
 	}
