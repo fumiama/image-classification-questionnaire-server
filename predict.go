@@ -116,7 +116,8 @@ func predicturl(url string, loli bool, newcls bool, hasr18 bool, nopredict bool)
 	} else {
 		imagetarget = "cust"
 	}
-	_, dh := storage.SaveImgBytes(data, imagetarget, true, 0)
+	stat, dh := storage.SaveImgBytes(data, imagetarget, true, 0)
+	logrus.Println("[predicturl]", stat)
 	if dh == "" {
 		logrus.Errorln("[predicturl] get dhash error:", err, ".")
 		return -3, dh, nil
