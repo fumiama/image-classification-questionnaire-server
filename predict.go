@@ -135,9 +135,16 @@ func predicturl(url string, loli bool, newcls bool, hasr18 bool, nopredict bool)
 	if !exists(filefullpath) {
 		data, err = storage.GetImgBytes(imagetarget, dh+".webp")
 		if err != nil {
+			if !loli {
+				data, err = storage.GetImgBytes("img", dh+".webp")
+				if err == nil {
+					goto SAVECACHE
+				}
+			}
 			logrus.Errorln("[predicturl]", err)
 			return -5, dh, nil
 		}
+	SAVECACHE:
 		err = os.WriteFile(filefullpath, data, 0644)
 		if err != nil {
 			logrus.Errorln("[predicturl]", err)
