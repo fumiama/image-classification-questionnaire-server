@@ -404,8 +404,10 @@ func save() {
 	if err == nil {
 		json.NewEncoder(f).Encode(&items)
 	}
+	f.Close()
 	f, err = os.Create(fmt.Sprintf("newlolitags%d.json", time.Now().Unix()))
 	if err == nil {
 		json.NewEncoder(f).Encode(&tags)
 	}
+	f.Close()
 }
