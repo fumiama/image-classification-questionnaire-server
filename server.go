@@ -387,7 +387,7 @@ func main() {
 			// http.Handle("/yuka/", http.StripPrefix("/yuka/", http.FileServer(http.Dir(imgdir))))
 			defer save()
 			sig := make(chan os.Signal, 1)
-			signal.Notify(sig, os.Kill, os.Interrupt)
+			signal.Notify(sig, os.Kill)
 			go func() {
 				<-sig
 				save()
