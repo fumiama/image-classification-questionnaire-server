@@ -387,7 +387,7 @@ func main() {
 			// http.Handle("/yuka/", http.StripPrefix("/yuka/", http.FileServer(http.Dir(imgdir))))
 			defer save()
 			sig := make(chan os.Signal, 1)
-			signal.Notify(sig, os.Kill)
+			signal.Notify(sig)
 			go func() {
 				<-sig
 				save()
@@ -400,12 +400,13 @@ func main() {
 }
 
 func save() {
-	f, err := os.Create(fmt.Sprintf("newlolipics%d.json", time.Now().Unix()))
+	t := time.Now().Unix()
+	f, err := os.Create(fmt.Sprintf("newlolipics_%d.json", t))
 	if err == nil {
 		json.NewEncoder(f).Encode(&items)
 	}
 	f.Close()
-	f, err = os.Create(fmt.Sprintf("newlolitags%d.json", time.Now().Unix()))
+	f, err = os.Create(fmt.Sprintf("newlolitags_%d.json", t))
 	if err == nil {
 		json.NewEncoder(f).Encode(&tags)
 	}
