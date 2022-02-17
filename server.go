@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"os/signal"
 	"runtime"
 	"strconv"
 	"syscall"
@@ -384,21 +385,27 @@ func main() {
 			http.HandleFunc("/pickdl", pickdl)
 			http.HandleFunc("/dice", dice)
 			// http.Handle("/yuka/", http.StripPrefix("/yuka/", http.FileServer(http.Dir(imgdir))))
-			defer func() {
-				if err == nil {
-					f, err := os.Create(fmt.Sprintf("newlolipics%d.json", time.Now().Unix()))
-					if err == nil {
-						json.NewEncoder(f).Encode(&items)
-					}
-					f, err = os.Create(fmt.Sprintf("newlolitags%d.json", time.Now().Unix()))
-					if err == nil {
-						json.NewEncoder(f).Encode(&tags)
-					}
-				}
+			defer save()
+			sig := make(chan os.Signal, 1)
+			signal.Notify(sig, os.Kill)
+			go func() {
+				<-sig
+				save()
 			}()
 			log.Error(http.Serve(listener, nil))
 		}
 	} else {
 		fmt.Println("Usage: <listen_addr> <apiurl> <password> <authkey> (userid)")
+	}
+}
+
+func save() {
+	f, err := os.Create(fmt.Sprintf("newlolipics%d.json", time.Now().Unix()))
+	if err == nil {
+		json.NewEncoder(f).Encode(&items)
+	}
+	f, err = os.Create(fmt.Sprintf("newlolitags%d.json", time.Now().Unix()))
+	if err == nil {
+		json.NewEncoder(f).Encode(&tags)
 	}
 }
