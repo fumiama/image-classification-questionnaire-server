@@ -1,15 +1,14 @@
 package main
 
 import (
-	"crypto/tls"
+	"encoding/json"
 	"io/ioutil"
-	"net"
 	"net/http"
 	"os"
-	"strings"
+	"sync"
 
 	gsc "github.com/fumiama/go-setu-class"
-	"github.com/fumiama/imago"
+	"github.com/fumiama/loliana/lolicon"
 	"github.com/sirupsen/logrus"
 )
 
@@ -23,27 +22,10 @@ const (
 var (
 	eroindex int
 	norindex int
-	// P站 无污染 IP 地址
-	IPTables = map[string]string{
-		"pixiv.net":   "210.140.131.223:443",
-		"i.pximg.net": "210.140.92.142:443",
-	}
 	// P站特殊客户端
-	client = &http.Client{
-		// 解决中国大陆无法访问的问题
-		Transport: &http.Transport{
-			DisableKeepAlives: false,
-			// 隐藏 sni 标志
-			TLSClientConfig: &tls.Config{
-				ServerName:         "-",
-				InsecureSkipVerify: true,
-			},
-			// 更改 dns
-			Dial: func(network, addr string) (net.Conn, error) {
-				return net.Dial("tcp", IPTables["i.pximg.net"])
-			},
-		},
-	}
+	client  = &http.Client{}
+	items   []*lolicon.Item
+	itemsmu sync.Mutex
 )
 
 func init() {
@@ -65,19 +47,15 @@ func getloliurl(hasr18 bool) (string, bool) {
 		return "", false
 	}
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	var item lolicon.Item
+	err = json.NewDecoder(resp.Body).Decode(&item)
 	if err != nil {
 		return "", false
 	}
-	s := imago.BytesToString(body)
-	logrus.Println("[getloli] get body.")
-	r := strings.Index(s, "\"r18\":")
-	is18 := s[r+6:r+10] == "true"
-	logrus.Println("[getloli] is18:", is18, ".")
-	s = s[strings.Index(s, "\"urls\":{\"original\":\"")+20:]
-	s = s[:strings.Index(s, "\"}")]
-	logrus.Println("[getloli] url:", s, ".")
-	return s, is18
+	itemsmu.Lock()
+	items = append(items, &item)
+	itemsmu.Unlock()
+	return item.Original, item.R18
 }
 
 // predicturl return class dhash

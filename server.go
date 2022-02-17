@@ -2,6 +2,7 @@ package main
 
 import (
 	_ "embed" // embed index
+	"encoding/json"
 	"fmt"
 	"io"
 	"net"
@@ -383,7 +384,15 @@ func main() {
 			http.HandleFunc("/pickdl", pickdl)
 			http.HandleFunc("/dice", dice)
 			// http.Handle("/yuka/", http.StripPrefix("/yuka/", http.FileServer(http.Dir(imgdir))))
-			log.Fatal(http.Serve(listener, nil))
+			defer func() {
+				if err == nil {
+					f, err := os.Create(fmt.Sprintf("newloli%d.json", time.Now().Unix()))
+					if err == nil {
+						json.NewEncoder(f).Encode(&items)
+					}
+				}
+			}()
+			log.Error(http.Serve(listener, nil))
 		}
 	} else {
 		fmt.Println("Usage: <listen_addr> <apiurl> <password> <authkey> (userid)")
