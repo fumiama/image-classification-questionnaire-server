@@ -25,6 +25,11 @@ const (
 	loliurlnm = "https://api.lolicon.app/setu/v2?proxy=null"
 )
 
+type loliresult struct {
+	Error string         `json:"error"`
+	Data  []lolicon.Item `json:"data"`
+}
+
 var (
 	eroindex int
 	norindex int
@@ -55,12 +60,12 @@ func getloliurl(hasr18 bool) (*lolicon.Item, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
-	var item lolicon.Item
-	err = json.NewDecoder(resp.Body).Decode(&item)
+	var r loliresult
+	err = json.NewDecoder(resp.Body).Decode(&r)
 	if err != nil {
 		return nil, err
 	}
-	return &item, nil
+	return &r.Data[0], nil
 }
 
 // predicturl return class dhash
@@ -71,7 +76,6 @@ func predicturl(url string, loli bool, newcls bool, hasr18 bool, nopredict bool)
 	var err error
 	if loli {
 		item, err = getloliurl(hasr18)
-		logrus.Infoln(item)
 		if err != nil {
 			return -8, "", nil
 		}
