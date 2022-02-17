@@ -1,13 +1,19 @@
 package main
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
 	"os"
+	"regexp"
 	"sync"
 
+	base14 "github.com/fumiama/go-base16384"
 	gsc "github.com/fumiama/go-setu-class"
+	"github.com/fumiama/imago"
+	"github.com/fumiama/loliana/database"
 	"github.com/fumiama/loliana/lolicon"
 	"github.com/sirupsen/logrus"
 )
@@ -23,9 +29,12 @@ var (
 	eroindex int
 	norindex int
 	// P站特殊客户端
-	client  = &http.Client{}
-	items   []*lolicon.Item
-	itemsmu sync.Mutex
+	client      = &http.Client{}
+	items       []database.Picture
+	tags        = make(map[string]database.Tag)
+	itemsmu     sync.Mutex
+	pidpreg     = regexp.MustCompile(`\d+_p\d+`)
+	datepathreg = regexp.MustCompile(`\d{4}/\d{2}/d{2}/d{2}/d{2}/d{2}`)
 )
 
 func init() {
@@ -33,8 +42,7 @@ func init() {
 	norindex = gsc.LoadModule(norpath)
 }
 
-// getloliurl return url is18
-func getloliurl(hasr18 bool) (string, bool) {
+func getloliurl(hasr18 bool) (*lolicon.Item, error) {
 	var link string
 	if hasr18 {
 		link = loliurl18
@@ -44,30 +52,29 @@ func getloliurl(hasr18 bool) (string, bool) {
 	// 网络请求
 	resp, err := http.Get(link)
 	if err != nil {
-		return "", false
+		return nil, err
 	}
 	defer resp.Body.Close()
 	var item lolicon.Item
 	err = json.NewDecoder(resp.Body).Decode(&item)
 	if err != nil {
-		return "", false
+		return nil, err
 	}
-	itemsmu.Lock()
-	items = append(items, &item)
-	itemsmu.Unlock()
-	return item.Original, item.R18
+	return &item, nil
 }
 
 // predicturl return class dhash
 func predicturl(url string, loli bool, newcls bool, hasr18 bool, nopredict bool) (int, string, []byte) {
 	var r18 bool
-	if loli {
-		url, r18 = getloliurl(hasr18)
-	} else {
-		r18 = false
-	}
+	var item *lolicon.Item
 	var resp *http.Response
 	var err error
+	if loli {
+		item, err = getloliurl(hasr18)
+		if err != nil {
+			return -8, "", nil
+		}
+	}
 	if loli {
 		// 网络请求
 		request, _ := http.NewRequest("GET", url, nil)
@@ -101,6 +108,9 @@ func predicturl(url string, loli bool, newcls bool, hasr18 bool, nopredict bool)
 		return -3, dh, nil
 	}
 	logrus.Infoln("[predicturl] get dhash :", dh, ".")
+	m := md5.Sum(data)
+	ms := hex.EncodeToString(m[:])
+	logrus.Infoln("[predicturl] get md6 :", ms, ".")
 	var p int
 	filefullpath := cachedir + "/" + dh + ".webp"
 	if !exists(cachedir) {
@@ -128,6 +138,34 @@ func predicturl(url string, loli bool, newcls bool, hasr18 bool, nopredict bool)
 			logrus.Errorln("[predicturl]", err)
 			return -6, dh, data
 		}
+		ts, _ := json.Marshal(item.Tags)
+		pidp := pidpreg.FindString(item.Original)
+		itemsmu.Lock()
+		items = append(items, database.Picture{
+			PidP:     pidp,
+			UID:      item.UID,
+			Width:    item.Width,
+			Height:   item.Height,
+			Title:    item.Title,
+			Author:   item.Author,
+			R18:      item.R18,
+			Tags:     imago.BytesToString(ts),
+			Ext:      item.Ext,
+			DatePath: datepathreg.FindString(item.Original),
+		})
+		for _, tag := range item.Tags {
+			name, err := base14.UTF16be2utf8(base14.EncodeString(tag))
+			if err != nil {
+				logrus.Errorln("encode tag", tag, "error:", err)
+				continue
+			}
+			t := imago.BytesToString(name)
+			tags[t] = database.Tag{
+				PidP: pidp,
+				UID:  item.UID,
+			}
+		}
+		itemsmu.Unlock()
 	} else {
 		data, err = os.ReadFile(filefullpath)
 		if err != nil {

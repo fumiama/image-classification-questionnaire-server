@@ -386,9 +386,13 @@ func main() {
 			// http.Handle("/yuka/", http.StripPrefix("/yuka/", http.FileServer(http.Dir(imgdir))))
 			defer func() {
 				if err == nil {
-					f, err := os.Create(fmt.Sprintf("newloli%d.json", time.Now().Unix()))
+					f, err := os.Create(fmt.Sprintf("newlolipics%d.json", time.Now().Unix()))
 					if err == nil {
 						json.NewEncoder(f).Encode(&items)
+					}
+					f, err = os.Create(fmt.Sprintf("newlolitags%d.json", time.Now().Unix()))
+					if err == nil {
+						json.NewEncoder(f).Encode(&tags)
 					}
 				}
 			}()
