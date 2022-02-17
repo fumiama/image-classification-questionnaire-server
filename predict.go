@@ -76,6 +76,7 @@ func predicturl(url string, loli bool, newcls bool, hasr18 bool, nopredict bool)
 	var err error
 	if loli {
 		item, err = getloliurl(hasr18)
+		logrus.Println(item)
 		if err != nil {
 			return -8, "", nil
 		}
