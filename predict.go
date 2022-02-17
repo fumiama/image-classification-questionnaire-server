@@ -74,6 +74,7 @@ func predicturl(url string, loli bool, newcls bool, hasr18 bool, nopredict bool)
 		if err != nil {
 			return -8, "", nil
 		}
+		url = item.Original
 	}
 	if loli {
 		// 网络请求
