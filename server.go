@@ -391,6 +391,7 @@ func main() {
 			go func() {
 				<-sig
 				save()
+				os.Exit(0)
 			}()
 			log.Error(http.Serve(listener, nil))
 		}
