@@ -26,8 +26,23 @@ const (
 )
 
 type loliresult struct {
-	Error string         `json:"error"`
-	Data  []lolicon.Item `json:"data"`
+	Error string `json:"error"`
+	Data  []struct {
+		Pid        int      `json:"pid"`
+		P          int      `json:"p"`
+		UID        int      `json:"uid"`
+		Title      string   `json:"title"`
+		Author     string   `json:"author"`
+		R18        bool     `json:"r18"`
+		Width      int      `json:"width"`
+		Height     int      `json:"height"`
+		Tags       []string `json:"tags"`
+		Ext        string   `json:"ext"`
+		UploadDate int64    `json:"uploadDate"`
+		Urls       struct {
+			Original string `json:"original"`
+		} `json:"urls"`
+	} `json:"data"`
 }
 
 var (
@@ -65,7 +80,20 @@ func getloliurl(hasr18 bool) (*lolicon.Item, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &r.Data[0], nil
+	i := r.Data[0]
+	return &lolicon.Item{
+		Pid:      i.Pid,
+		P:        i.P,
+		UID:      i.UID,
+		Width:    i.Width,
+		Height:   i.Height,
+		Title:    i.Title,
+		Author:   i.Author,
+		R18:      i.R18,
+		Tags:     i.Tags,
+		Ext:      i.Ext,
+		Original: i.Urls.Original,
+	}, nil
 }
 
 // predicturl return class dhash
@@ -76,7 +104,6 @@ func predicturl(url string, loli bool, newcls bool, hasr18 bool, nopredict bool)
 	var err error
 	if loli {
 		item, err = getloliurl(hasr18)
-		logrus.Println(item)
 		if err != nil {
 			return -8, "", nil
 		}
