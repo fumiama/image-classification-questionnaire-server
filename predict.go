@@ -108,6 +108,7 @@ func predicturl(url string, loli bool, newcls bool, hasr18 bool, nopredict bool)
 			return -8, "", nil
 		}
 		url = item.Original
+		r18 = item.R18
 	}
 	if loli {
 		// 网络请求
