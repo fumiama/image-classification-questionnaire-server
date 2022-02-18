@@ -46,7 +46,7 @@ git clone --depth=1 https://github.com/fumiama/image-classification-questionnair
 1. 如果你是`ubuntu`用户，由于该系统绑定`80`端口需要`root`权限，因此需要添加可选参数`userid`以在绑定端口后降权运行。
 2. 密码必须为两个汉字，在运行后密码将在命令行被隐藏，但不会清除命令历史记录，请手动清除。
 ```bash
-Usage: <listen_addr> <configfile> <imgdir> <custimgdir> <password> (userid) &
+Usage: <listen_addr> <configfile> <imgdir> <custimgdir> <password> <dbfile> (userid) &
 ```
 注意：
 1. 如果添加末尾的`&`，程序将会以`daemon`运行。
@@ -587,7 +587,18 @@ wget --post-file=image.webp http://[server_domain]/upload?uuid=用户
 1. `用户`是两个(数量不可增减)`utf-8`编码的汉字，唯一标识了某个用户。
 2. 返回的图片名经过了转义。
 
+### 8. 获取图片 dhash (仅Golang)
+- 格式: http://[server_domain]/dhash?pidp=pid_pn
 
+- 返回:
+1. 成功
+```json
+
+```
+2. 失败
+```
+各种状态码
+```
 # 小工具
 
 一些实用的小工具放在了`tools`文件夹，包括批量上传图片，批量转换图片到`webp`，批量重命名文件，批量缩小`webp`大小，从flask/quart迁移到go等。

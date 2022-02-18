@@ -10,7 +10,7 @@ import (
 	"regexp"
 	"sync"
 
-	base14 "github.com/fumiama/go-base16384"
+	sqlite "github.com/FloatTech/sqlite"
 	gsc "github.com/fumiama/go-setu-class"
 	"github.com/fumiama/imago"
 	"github.com/fumiama/loliana/database"
@@ -50,9 +50,8 @@ var (
 	norindex int
 	// P站特殊客户端
 	client      = &http.Client{}
-	items       []database.Picture
-	tags        = make(map[string]database.Tag)
-	itemsmu     sync.Mutex
+	db          = &sqlite.Sqlite{}
+	dbmu        sync.RWMutex
 	pidpreg     = regexp.MustCompile(`\d+_p\d+`)
 	datepathreg = regexp.MustCompile(`\d{4}/\d{2}/\d{2}/\d{2}/\d{2}/\d{2}`)
 )
@@ -142,41 +141,42 @@ func predicturl(url string, loli bool, newcls bool, hasr18 bool, nopredict bool)
 		logrus.Errorln("[predicturl] get dhash error:", err, ".")
 		return -3, dh, nil
 	}
-	logrus.Infoln("[predicturl] get dhash :", dh, ".")
+	logrus.Infoln("[predicturl] get dhash:", dh, ".")
 	m := md5.Sum(data)
 	ms := hex.EncodeToString(m[:])
-	logrus.Infoln("[predicturl] get md6 :", ms, ".")
+	logrus.Infoln("[predicturl] get md5:", ms, ".")
 	var p int
 	filefullpath := cachedir + "/" + dh + ".webp"
 	if !exists(cachedir) {
 		err = os.MkdirAll(cachedir, 0755)
 		if err != nil {
-			logrus.Errorln("[predicturl]", err)
+			logrus.Errorln("[predicturl] mk cache dir err:", err)
 			return -4, dh, nil
 		}
 	}
 	if !exists(filefullpath) {
 		data, err = storage.GetImgBytes(imagetarget, dh+".webp")
-		if err != nil {
+		if err != nil && imagetarget == "cust" {
 			if !loli {
+				logrus.Infoln("[predicturl] try to get cust img", dh, "from img...")
 				data, err = storage.GetImgBytes("img", dh+".webp")
 				if err == nil {
 					goto SAVECACHE
 				}
 			}
-			logrus.Errorln("[predicturl]", err)
+			logrus.Errorln("[predicturl] get img", dh, "from storage/img err:", err)
 			return -5, dh, nil
 		}
 	SAVECACHE:
 		err = os.WriteFile(filefullpath, data, 0644)
 		if err != nil {
-			logrus.Errorln("[predicturl]", err)
+			logrus.Errorln("[predicturl] save cache file err:", err)
 			return -6, dh, data
 		}
 		ts, _ := json.Marshal(item.Tags)
 		pidp := pidpreg.FindString(item.Original)
-		itemsmu.Lock()
-		items = append(items, database.Picture{
+		dbmu.Lock()
+		err = db.Insert("picture", &database.Picture{
 			PidP:     pidp,
 			UID:      item.UID,
 			Width:    item.Width,
@@ -187,24 +187,17 @@ func predicturl(url string, loli bool, newcls bool, hasr18 bool, nopredict bool)
 			Tags:     imago.BytesToString(ts),
 			Ext:      item.Ext,
 			DatePath: datepathreg.FindString(item.Original),
+			DHash:    dh,
+			Md5:      ms,
 		})
-		for _, tag := range item.Tags {
-			name, err := base14.UTF16be2utf8(base14.EncodeString(tag))
-			if err != nil {
-				logrus.Errorln("encode tag", tag, "error:", err)
-				continue
-			}
-			t := imago.BytesToString(name)
-			tags[t] = database.Tag{
-				PidP: pidp,
-				UID:  item.UID,
-			}
+		dbmu.Unlock()
+		if err != nil {
+			logrus.Errorln("[predicturl] insert db err:", err)
 		}
-		itemsmu.Unlock()
 	} else {
 		data, err = os.ReadFile(filefullpath)
 		if err != nil {
-			logrus.Errorln("[predicturl]", err)
+			logrus.Errorln("[predicturl] read cache file err:", err)
 			return -7, dh, nil
 		}
 	}

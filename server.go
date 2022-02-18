@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"os/signal"
 	"runtime"
 	"strconv"
 	"syscall"
@@ -17,6 +16,7 @@ import (
 
 	para "github.com/fumiama/go-hide-param"
 	"github.com/fumiama/imago"
+	"github.com/fumiama/loliana/database"
 	log "github.com/sirupsen/logrus"
 	easy "github.com/t-tomalak/logrus-easy-formatter"
 
@@ -117,6 +117,11 @@ func img(resp http.ResponseWriter, req *http.Request) {
 func upload(resp http.ResponseWriter, req *http.Request) {
 	// 检查是否POST请求
 	if methodis("POST", resp, req) {
+		if _, err := storage.GetConf(); err != nil {
+			http.Error(resp, "500 Internal Server Error", http.StatusInternalServerError)
+			log.Errorln("error: can't connect to storage.")
+			return
+		}
 		// 检查uid
 		q := req.URL.Query()
 		uid, ok := q["uuid"]
@@ -163,6 +168,11 @@ func upload(resp http.ResponseWriter, req *http.Request) {
 func upform(resp http.ResponseWriter, req *http.Request) {
 	// 检查是否POST请求
 	if methodis("POST", resp, req) {
+		if _, err := storage.GetConf(); err != nil {
+			http.Error(resp, "500 Internal Server Error", http.StatusInternalServerError)
+			log.Errorln("error: can't connect to storage.")
+			return
+		}
 		// 检查uid
 		q := req.URL.Query()
 		uid, ok := q["uuid"]
@@ -205,6 +215,11 @@ func upform(resp http.ResponseWriter, req *http.Request) {
 
 func vote(resp http.ResponseWriter, req *http.Request) {
 	if methodis("GET", resp, req) {
+		if _, err := storage.GetConf(); err != nil {
+			http.Error(resp, "500 Internal Server Error", http.StatusInternalServerError)
+			log.Errorln("error: can't connect to storage.")
+			return
+		}
 		q := req.URL.Query()
 		uid, ok := q["uuid"]
 		img, ok1 := q["img"]
@@ -241,6 +256,11 @@ func vote(resp http.ResponseWriter, req *http.Request) {
 
 func pickof(resp http.ResponseWriter, req *http.Request, isdl bool) {
 	if methodis("GET", resp, req) {
+		if _, err := storage.GetConf(); err != nil {
+			http.Error(resp, "500 Internal Server Error", http.StatusInternalServerError)
+			log.Errorln("error: can't connect to storage.")
+			return
+		}
 		// 检查uid
 		q := req.URL.Query()
 		uid, ok := q["uuid"]
@@ -294,7 +314,7 @@ func dice(resp http.ResponseWriter, req *http.Request) {
 		var link string
 		if _, err := storage.GetConf(); err != nil {
 			http.Error(resp, "500 Internal Server Error", http.StatusInternalServerError)
-			log.Errorln("[/dice] predict error: can't connect to storage.")
+			log.Errorln("error: can't connect to storage.")
 			return
 		}
 		// 检查url
@@ -327,6 +347,30 @@ func dice(resp http.ResponseWriter, req *http.Request) {
 	}
 }
 
+func dhash(resp http.ResponseWriter, req *http.Request) {
+	// 检查是否GET请求
+	if methodis("GET", resp, req) {
+		// 检查url
+		q := req.URL.Query()
+		log.Infoln("[/dhash] query:", q, ".")
+		pidp := getfirst("pidp", &q)
+		if !pidpreg.MatchString(pidp) {
+			http.Error(resp, "400 BAD REQUEST: invalid arg pidp", http.StatusBadRequest)
+			return
+		}
+		var p database.Picture
+		dbmu.RLock()
+		err := db.Find("picture", &p, "WHERE pidp="+pidpreg.FindString(pidp))
+		dbmu.RUnlock()
+		if err != nil {
+			http.Error(resp, "500 Internal Server Error: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+		_ = json.NewEncoder(resp).Encode(&p)
+		return
+	}
+}
+
 func init() {
 	log.SetFormatter(&easy.Formatter{
 		TimestampFormat: "2006-01-02 15:04:05",
@@ -337,7 +381,7 @@ func init() {
 
 func main() {
 	arglen := len(os.Args)
-	if arglen == 5 || arglen == 6 {
+	if arglen == 6 || arglen == 7 {
 		apiurl := os.Args[2]
 
 		pwd, _ = u82int(os.Args[3])
@@ -350,7 +394,13 @@ func main() {
 		}
 		para.Hide(4)
 
-		err := loadconf()
+		db.DBPath = os.Args[5]
+		err := db.Open()
+		if err != nil {
+			panic(err)
+		}
+
+		err = loadconf()
 		if err != nil {
 			panic(err)
 		}
@@ -365,8 +415,8 @@ func main() {
 		if err != nil {
 			panic(err)
 		} else {
-			if arglen == 6 {
-				uid, err1 := strconv.Atoi(os.Args[5])
+			if arglen == 7 {
+				uid, err1 := strconv.Atoi(os.Args[6])
 				if err1 == nil {
 					syscall.Setuid(uid)
 					syscall.Setgid(uid)
@@ -384,32 +434,11 @@ func main() {
 			http.HandleFunc("/pick", pick)
 			http.HandleFunc("/pickdl", pickdl)
 			http.HandleFunc("/dice", dice)
+			http.HandleFunc("/dhash", dhash)
 			// http.Handle("/yuka/", http.StripPrefix("/yuka/", http.FileServer(http.Dir(imgdir))))
-			defer save()
-			sig := make(chan os.Signal, 1)
-			signal.Notify(sig, os.Interrupt, os.Kill)
-			go func() {
-				<-sig
-				save()
-				os.Exit(0)
-			}()
 			log.Error(http.Serve(listener, nil))
 		}
 	} else {
-		fmt.Println("Usage: <listen_addr> <apiurl> <password> <authkey> (userid)")
+		fmt.Println("Usage: <listen_addr> <apiurl> <password> <authkey> <dbfile> (userid)")
 	}
-}
-
-func save() {
-	t := time.Now().Unix()
-	f, err := os.Create(fmt.Sprintf("newlolipics_%d.json", t))
-	if err == nil {
-		json.NewEncoder(f).Encode(&items)
-	}
-	f.Close()
-	f, err = os.Create(fmt.Sprintf("newlolitags_%d.json", t))
-	if err == nil {
-		json.NewEncoder(f).Encode(&tags)
-	}
-	f.Close()
 }

@@ -3,6 +3,7 @@ module github.com/fumiama/image-classification-questionnaire-server
 go 1.16
 
 require (
+	github.com/FloatTech/sqlite v0.1.3
 	github.com/fumiama/go-base16384 v1.3.0
 	github.com/fumiama/go-hide-param v0.1.4
 	github.com/fumiama/go-setu-class v1.0.0
