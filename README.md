@@ -10,6 +10,8 @@
 
 # 使用准备
 
+## Python准备
+
 由于使用了[base16384](https://github.com/fumiama/base16384)库，因此需要先行编译安装。
 
 ```bash
@@ -26,7 +28,7 @@ cmake ..
 make
 make install
 ```
-## Python准备
+
 你还需要安装`pillow`，`numba`，`imagehash`，`quart/flask`, `gevent`(如果使用`flask`)以确保程序运行。
 ## Golang准备
 你只需要安装`libwebp-dev`，并在使用前运行
