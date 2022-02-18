@@ -31,11 +31,11 @@ make install
 
 你还需要安装`pillow`，`numba`，`imagehash`，`quart/flask`, `gevent`(如果使用`flask`)以确保程序运行。
 ## Golang准备
-你只需要安装`libwebp-dev`，并在使用前运行
+由于整合了[setu-class](https://github.com/fumiama/setu-class)，你需要编译安装[setu-class-cpp](https://github.com/fumiama/setu-class-cpp)库，该库要求您已经安装了`libtorch`。然后，请将该仓库的`ero.pt`和`nor.pt`复制到本项目编译出的可执行文件旁。
+你还需要安装`libwebp-dev`，并在使用前运行
 ```bash
 go mod tidy
 ```
-即可
 
 # 开始使用
 
