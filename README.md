@@ -35,7 +35,7 @@ make install
 
 另外，您还需要部署一个[simple-storage](https://github.com/fumiama/simple-storage)，命令行参数中需要填写其`apiurl`与`password`。
 
-你还需要安装`libwebp-dev`，并在使用前运行
+接下来安装`libwebp-dev`，并在使用前运行
 ```bash
 go mod tidy
 ```
