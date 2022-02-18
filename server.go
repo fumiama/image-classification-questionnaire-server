@@ -360,10 +360,10 @@ func dhash(resp http.ResponseWriter, req *http.Request) {
 		}
 		var p database.Picture
 		dbmu.RLock()
-		err := db.Find("picture", &p, "WHERE pidp="+pidpreg.FindString(pidp))
+		err := db.Find("picture", &p, "WHERE pidp='"+pidpreg.FindString(pidp)+"'")
 		dbmu.RUnlock()
 		if err != nil {
-			http.Error(resp, "500 Internal Server Error: "+err.Error(), http.StatusInternalServerError)
+			http.Error(resp, "404 NOT FOUND: "+err.Error(), http.StatusNotFound)
 			return
 		}
 		_ = json.NewEncoder(resp).Encode(&p)
