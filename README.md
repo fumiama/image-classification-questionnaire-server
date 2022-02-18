@@ -291,6 +291,19 @@ wget --post-file=image.webp http://[server_domain]/upload?uuid=用户
 ### 8. dice
 参数详见[setu-class](https://github.com/SakuraACGN/setu-class)
 
+### 9. 获取图片 dhash
+- 格式: http://[server_domain]/dhash?pidp=pid_pn
+
+- 返回:
+1. 成功
+```json
+{"PidP":"53538084_p0","UID":63652,"Width":650,"Height":906,"Title":"秋月照月本表紙","Author":"中乃空","R18":false,"Tags":"[\"艦隊これくしょん\",\"舰队collection\",\"C89\",\"秋月\",\"Akizuki\",\"照月\",\"Teruzuki\",\"艦ぱい\",\"shipgirl breasts\",\"尻神様\",\"尻神样\",\"即夜戦\",\"即将夜战\",\"秋月型\",\"Akizuki-class\",\"ねじ込みたい尻\",\"这屁股让人想肛\"]","Ext":"png","DatePath":"2015/11/14/00/28/41","DHash":"嗉聚裌蠼嬀","Md5":"34f4ed2a6500dc8c6822f0d4333639ba"}
+```
+2. 失败
+```
+各种状态码，附带简短说明
+```
+
 # 简易版API（不建议用）
 
 对应执行文件为`server.py`
@@ -587,18 +600,6 @@ wget --post-file=image.webp http://[server_domain]/upload?uuid=用户
 1. `用户`是两个(数量不可增减)`utf-8`编码的汉字，唯一标识了某个用户。
 2. 返回的图片名经过了转义。
 
-### 8. 获取图片 dhash (仅Golang)
-- 格式: http://[server_domain]/dhash?pidp=pid_pn
-
-- 返回:
-1. 成功
-```json
-
-```
-2. 失败
-```
-各种状态码
-```
 # 小工具
 
 一些实用的小工具放在了`tools`文件夹，包括批量上传图片，批量转换图片到`webp`，批量重命名文件，批量缩小`webp`大小，从flask/quart迁移到go等。
