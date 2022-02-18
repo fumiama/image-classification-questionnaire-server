@@ -32,6 +32,9 @@ make install
 你还需要安装`pillow`，`numba`，`imagehash`，`quart/flask`, `gevent`(如果使用`flask`)以确保程序运行。
 ## Golang准备
 由于整合了[setu-class](https://github.com/fumiama/setu-class)，你需要编译安装[setu-class-cpp](https://github.com/fumiama/setu-class-cpp)库，该库要求您已经安装了`libtorch`。然后，请将该仓库的`ero.pt`和`nor.pt`复制到本项目编译出的可执行文件旁。
+
+另外，您还需要部署一个[simple-storage](https://github.com/fumiama/simple-storage)，命令行参数中需要填写其`apiurl`与`password`。
+
 你还需要安装`libwebp-dev`，并在使用前运行
 ```bash
 go mod tidy
@@ -48,12 +51,13 @@ git clone --depth=1 https://github.com/fumiama/image-classification-questionnair
 1. 如果你是`ubuntu`用户，由于该系统绑定`80`端口需要`root`权限，因此需要添加可选参数`userid`以在绑定端口后降权运行。
 2. 密码必须为两个汉字，在运行后密码将在命令行被隐藏，但不会清除命令历史记录，请手动清除。
 ```bash
-Usage: <listen_addr> <configfile> <imgdir> <custimgdir> <password> <dbfile> (userid) &
+Usage: <listen_addr> <apiurl> <password> <authkey> <dbfile> (userid) &
 ```
 注意：
 1. 如果添加末尾的`&`，程序将会以`daemon`运行。
 2. `userid`为可选项。如果设置，程序将会在绑定端口后切换到该`uid`处理请求。
 3. `Windows`下使用不支持`userid`选项。
+4. `dbfile`位置任意。
 #### 2. 编译
 - 如果使用`gc`，添加`-ldflags "-s -w"`编译即可。
 - 如果使用`gccgo`，推荐使用如下优化参数以达到最佳效果。
