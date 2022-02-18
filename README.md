@@ -33,7 +33,7 @@ make install
 ## Golang准备
 由于整合了[setu-class](https://github.com/fumiama/setu-class)，你需要编译安装[setu-class-cpp](https://github.com/fumiama/setu-class-cpp)库，该库要求您已经安装了`libtorch`。然后，请将该仓库的`ero.pt`和`nor.pt`复制到本项目编译出的可执行文件旁。
 
-另外，您还需要部署一个[simple-storage](https://github.com/fumiama/simple-storage)，命令行参数中需要填写其`apiurl`与`password`。
+另外，您还需要部署一个[simple-storage](https://github.com/fumiama/simple-storage)，命令行参数中需要填写其`apiurl`与`authkey`。
 
 接下来安装`libwebp-dev`，并在使用前运行
 ```bash
