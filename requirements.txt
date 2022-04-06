@@ -1,0 +1,8 @@
+Flask
+gevent
+ImageHash
+numba
+Pillow
+pybase16384
+Quart
+urllib3
