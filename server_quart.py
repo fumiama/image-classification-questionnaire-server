@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-from base14.base14 import init_dll_in
 from quart import Quart, request, Response
 from random import randint, choice
 from urllib.request import quote, unquote
@@ -7,17 +6,15 @@ from time import time
 from hashlib import md5
 from glob import glob
 import sys, os, json
-from base14 import init_dll_in, get_base14
+from pybase16384 import encode_to_string
 from img import save_img
 
 host = ('0.0.0.0', 80)
 app = Quart(__name__)
 MAXBUFFSZ = 16*1024*1024
 
-init_dll_in('/usr/local/lib/')
-
 def get_uuid() -> str:
-	return get_base14(md5(str(time()).encode()).digest())[:2]
+	return encode_to_string(md5(str(time()).encode()).digest())[:2]
 
 def get_arg(key: str) -> str:
 	return request.args.get(key)

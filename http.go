@@ -24,13 +24,13 @@ func getuuid() string {
 	var buf [8]byte
 	binary.LittleEndian.PutUint64(buf[:], uint64(time.Now().Unix()))
 	ima := md5.Sum(buf[:])
-	uuid, _ := base14.UTF16be2utf8(base14.Encode(ima[:]))
+	uuid, _ := base14.UTF16BE2UTF8(base14.Encode(ima[:]))
 	return imago.BytesToString(uuid)[:6]
 }
 
 // u82int 字节数(大端)组转成int(无符号的)
 func u82int(s string) (int, error) {
-	b, err1 := base14.UTF82utf16be(imago.StringToBytes(s))
+	b, err1 := base14.UTF82UTF16BE(imago.StringToBytes(s))
 	if err1 != nil {
 		return 0, err1
 	}

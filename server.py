@@ -12,17 +12,15 @@ from hashlib import md5
 from PIL import Image
 import sys, os, form_fsm
 from img import get_dhash_b14, get_dhash_b14_io, decode_dhash, hamm_img
-from base14 import init_dll_in, get_base14
+from pybase16384 import encode_to_string
 
 host = ('0.0.0.0', 80)
 byte_succ = "succ".encode()
 byte_erro = "erro".encode()
 byte_null = "null".encode()
 
-init_dll_in('/usr/local/lib/')
-
 def get_uuid() -> str:
-	return get_base14(md5(str(time()).encode()).digest())[:2]
+	return encode_to_string(md5(str(time()).encode()).digest())[:2]
 
 def flush_io() -> None:
 	sys.stdout.flush()
