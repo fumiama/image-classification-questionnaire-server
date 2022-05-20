@@ -6,7 +6,7 @@
 
 > 用户可以利用api自己上传图像并指定分类，也可以从服务器的图像中查看图片，并指定分类。
 
-<div align=center> <a href="#"> <img src="http://sayuri.fumiama.top/cmoe?name=icqs&theme=gb" /> </a> </div>
+<div align=center> <a href="#"> <img src="http://cmoe.azurewebsites.net/cmoe?name=icqs&theme=gb" /> </a> </div>
 
 # 使用准备
 
